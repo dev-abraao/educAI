@@ -33,7 +33,7 @@ export default function AuthShell({ mode, onModeChange, children }: AuthShellPro
                         onClick={() => onModeChange('login')}
                         className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
                             isLogin ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                        }`}
+                        } cursor-pointer`}
                     >
                         Log in
                     </button>
@@ -42,7 +42,7 @@ export default function AuthShell({ mode, onModeChange, children }: AuthShellPro
                         onClick={() => onModeChange('register')}
                         className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
                             !isLogin ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                        }`}
+                        } cursor-pointer`}
                     >
                         Register
                     </button>

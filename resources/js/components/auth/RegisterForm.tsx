@@ -99,7 +99,7 @@ export default function RegisterForm() {
             <button
                 type="submit"
                 disabled={processing}
-                className="w-full rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-70"
+                className="cursor-pointer w-full rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-70"
             >
                 {processing ? 'Creating account...' : 'Create account'}
             </button>
