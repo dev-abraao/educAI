@@ -2,30 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Http\Requests\LoginRequest;
-use App\Http\Requests\RegisterRequest;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function register(RegisterRequest $request): RedirectResponse
-    {
-        $user = User::create($request->registrationData());
-
-        Auth::login($user);
-
-        $request->session()->regenerate();
-
-        return redirect()->intended(route('home'));
-    }
-
-    /**
-     * @throws ValidationException
-     */
     public function login(LoginRequest $request): RedirectResponse
     {
         if (!Auth::attempt($request->credentials(), true)) {
@@ -36,7 +20,14 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('home'));
+        $destination = match ($request->user()?->role) {
+            UserRole::ADMIN => route('admin.dashboard'),
+            UserRole::TEACHER => route('teacher.dashboard'),
+            UserRole::STUDENT => route('student.dashboard'),
+            default => route('landing'),
+        };
+
+        return redirect()->intended($destination);
     }
 
     public function logout(Request $request): RedirectResponse

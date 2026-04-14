@@ -1,12 +1,7 @@
 import { Head } from '@inertiajs/react';
-import { useState } from 'react';
-import AuthShell from '@/components/auth/AuthShell';
 import LoginForm from '@/components/auth/LoginForm';
-import RegisterForm from '@/components/auth/RegisterForm';
 
 export default function Welcome() {
-    const [mode, setMode] = useState<'login' | 'register'>('login');
-
     return (
         <>
             <Head title="EducAI" />
@@ -31,9 +26,22 @@ export default function Welcome() {
                         </p>
                     </section>
 
-                    <AuthShell mode={mode} onModeChange={setMode}>
-                        {mode === 'login' ? <LoginForm /> : <RegisterForm />}
-                    </AuthShell>
+                    <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/30 bg-white/85 p-8 shadow-2xl backdrop-blur-xl">
+                        <div className="absolute -top-16 -right-16 h-36 w-36 rounded-full bg-cyan-400/30 blur-2xl" />
+                        <div className="absolute -bottom-14 -left-14 h-36 w-36 rounded-full bg-amber-400/30 blur-2xl" />
+
+                        <div className="relative">
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">EducAI Platform</p>
+                            <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-900">Welcome back.</h1>
+                            <p className="mt-2 text-sm text-slate-600">
+                                Log in to access your dashboard and start working with your classes.
+                            </p>
+
+                            <div className="mt-6">
+                                <LoginForm />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </main>
         </>
