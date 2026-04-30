@@ -119,7 +119,7 @@ export default function AdminDashboard() {
     };
 
     const deleteUser = (userId: number) => {
-        if (!window.confirm('Delete this user?')) {
+        if (!window.confirm('Excluir este usuário?')) {
             return;
         }
 
@@ -130,18 +130,18 @@ export default function AdminDashboard() {
 
     return (
         <>
-            <Head title="Admin Dashboard" />
+            <Head title="Painel de Administração" />
             <main className="min-h-screen bg-slate-950 px-4 py-10 text-white sm:px-8">
                 <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.1fr_1.9fr]">
                     <section className="rounded-3xl border border-slate-700 bg-slate-900/85 p-6 shadow-xl">
-                        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">Admin</p>
-                        <h1 className="mt-3 text-2xl font-black">Register Users</h1>
-                        <p className="mt-2 text-sm text-slate-300">Create teacher and student accounts from here.</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">Painel de administração</p>
+                        <h1 className="mt-3 text-2xl font-black">Registrar Usuários</h1>
+                        <p className="mt-2 text-sm text-slate-300">Crie contas de professor e aluno a partir daqui.</p>
 
                         <form onSubmit={submitStore} className="mt-6 space-y-4">
                             <div>
                                 <label className="mb-1.5 block text-sm font-semibold text-slate-200" htmlFor="name">
-                                    Name
+                                    Nome
                                 </label>
                                 <input
                                     id="name"
@@ -157,7 +157,7 @@ export default function AdminDashboard() {
 
                             <div>
                                 <label className="mb-1.5 block text-sm font-semibold text-slate-200" htmlFor="email">
-                                    Email
+                                    E-mail
                                 </label>
                                 <input
                                     id="email"
@@ -174,7 +174,7 @@ export default function AdminDashboard() {
 
                             <div>
                                 <label className="mb-1.5 block text-sm font-semibold text-slate-200" htmlFor="role">
-                                    Role
+                                    Função
                                 </label>
                                 <select
                                     id="role"
@@ -184,7 +184,8 @@ export default function AdminDashboard() {
                                 >
                                     {roles.map((role) => (
                                         <option key={role} value={role}>
-                                            {role}
+                                            {role === 'teacher' && 'Professor'}
+                                            {role === 'student' && 'Aluno'}
                                         </option>
                                     ))}
                                 </select>
@@ -195,7 +196,7 @@ export default function AdminDashboard() {
 
                             <div>
                                 <label className="mb-1.5 block text-sm font-semibold text-slate-200" htmlFor="password">
-                                    Password
+                                    Senha
                                 </label>
                                 <input
                                     id="password"
@@ -215,7 +216,7 @@ export default function AdminDashboard() {
                                     className="mb-1.5 block text-sm font-semibold text-slate-200"
                                     htmlFor="password_confirmation"
                                 >
-                                    Confirm password
+                                    Confirmar senha
                                 </label>
                                 <input
                                     id="password_confirmation"
@@ -232,7 +233,7 @@ export default function AdminDashboard() {
                                 disabled={storeForm.processing}
                                 className="w-full rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-70"
                             >
-                                {storeForm.processing ? 'Creating...' : 'Create user'}
+                                {storeForm.processing ? 'Criando...' : 'Criar usuário'}
                             </button>
                         </form>
                     </section>
@@ -240,8 +241,8 @@ export default function AdminDashboard() {
                     <section className="rounded-3xl border border-slate-700 bg-slate-900/85 p-6 shadow-xl">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">Users</p>
-                                <h2 className="mt-2 text-2xl font-black">Manage Accounts</h2>
+                                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">Usuários</p>
+                                <h2 className="mt-2 text-2xl font-black">Gerenciar Usuários</h2>
                             </div>
                             <div className="flex items-center gap-2">
                                 <select
@@ -249,27 +250,27 @@ export default function AdminDashboard() {
                                     onChange={(event) => onFilterChange(event.target.value)}
                                     className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                                 >
-                                    <option value="">All roles</option>
-                                    <option value="teacher">Teacher</option>
-                                    <option value="student">Student</option>
+                                    <option value="">Todos os usuários</option>
+                                    <option value="teacher">Professor</option>
+                                    <option value="student">Aluno</option>
                                 </select>
                             </div>
                         </div>
 
                         <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-300">
-                            <span className="rounded-lg bg-slate-800 px-3 py-1">Teachers: {usersByRole.teacher}</span>
-                            <span className="rounded-lg bg-slate-800 px-3 py-1">Students: {usersByRole.student}</span>
+                            <span className="rounded-lg bg-slate-800 px-3 py-1">Professores: {usersByRole.teacher}</span>
+                            <span className="rounded-lg bg-slate-800 px-3 py-1">Alunos: {usersByRole.student}</span>
                         </div>
 
                         <div className="mt-6 overflow-x-auto">
                             <table className="w-full min-w-[620px] text-left text-sm">
                                 <thead>
                                     <tr className="border-b border-slate-700 text-slate-400">
-                                        <th className="py-3 pr-3">Name</th>
-                                        <th className="py-3 pr-3">Email</th>
-                                        <th className="py-3 pr-3">Role</th>
-                                        <th className="py-3 pr-3">Created</th>
-                                        <th className="py-3">Actions</th>
+                                        <th className="py-3 pr-3">Nome</th>
+                                        <th className="py-3 pr-3">E-mail</th>
+                                        <th className="py-3 pr-3">Função</th>
+                                        <th className="py-3 pr-3">Criado em (dd/mm/aaaa)</th>
+                                        <th className="py-3">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -277,7 +278,10 @@ export default function AdminDashboard() {
                                         <tr key={user.id} className="border-b border-slate-800 align-top">
                                             <td className="py-3 pr-3">{user.name}</td>
                                             <td className="py-3 pr-3">{user.email}</td>
-                                            <td className="py-3 pr-3 capitalize">{user.role}</td>
+                                            <td className="py-3 pr-3 capitalize">
+                                                {user.role === 'teacher' && 'Professor'}
+                                                {user.role === 'student' && 'Aluno'}
+                                            </td>
                                             <td className="py-3 pr-3">{new Date(user.created_at).toLocaleDateString()}</td>
                                             <td className="py-3">
                                                 <div className="flex gap-2">
@@ -286,14 +290,14 @@ export default function AdminDashboard() {
                                                         onClick={() => startEditing(user)}
                                                         className="rounded-lg border border-slate-600 px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
                                                     >
-                                                        Edit
+                                                        Editar
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => deleteUser(user.id)}
                                                         className="rounded-lg border border-rose-500/50 px-2.5 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/10"
                                                     >
-                                                        Delete
+                                                        Excluir
                                                     </button>
                                                 </div>
                                             </td>
@@ -302,7 +306,7 @@ export default function AdminDashboard() {
                                     {users.length === 0 && (
                                         <tr>
                                             <td colSpan={5} className="py-6 text-center text-slate-400">
-                                                No users found for this filter.
+                                                Não há usuários para mostrar.
                                             </td>
                                         </tr>
                                     )}
@@ -312,13 +316,13 @@ export default function AdminDashboard() {
 
                         {editingUserId !== null && (
                             <div className="mt-8 rounded-2xl border border-slate-700 bg-slate-950/70 p-5">
-                                <h3 className="text-lg font-bold">Edit user</h3>
+                                <h3 className="text-lg font-bold">Editar usuário</h3>
                                 <form onSubmit={submitUpdate} className="mt-4 grid gap-3 sm:grid-cols-2">
                                     <input
                                         value={updateForm.data.name}
                                         onChange={(event) => updateForm.setData('name', event.target.value)}
                                         className="rounded-xl border border-slate-600 bg-slate-950 px-3 py-2 text-slate-100"
-                                        placeholder="Name"
+                                        placeholder="Nome"
                                         required
                                     />
                                     <input
@@ -326,7 +330,7 @@ export default function AdminDashboard() {
                                         value={updateForm.data.email}
                                         onChange={(event) => updateForm.setData('email', event.target.value)}
                                         className="rounded-xl border border-slate-600 bg-slate-950 px-3 py-2 text-slate-100"
-                                        placeholder="Email"
+                                        placeholder="E-mail"
                                         required
                                     />
                                     <select
@@ -336,7 +340,8 @@ export default function AdminDashboard() {
                                     >
                                         {roles.map((role) => (
                                             <option key={role} value={role}>
-                                                {role}
+                                                {role === 'teacher' && 'Professor'}
+                                                {role === 'student' && 'Aluno'}
                                             </option>
                                         ))}
                                     </select>
@@ -345,14 +350,14 @@ export default function AdminDashboard() {
                                         value={updateForm.data.password}
                                         onChange={(event) => updateForm.setData('password', event.target.value)}
                                         className="rounded-xl border border-slate-600 bg-slate-950 px-3 py-2 text-slate-100"
-                                        placeholder="New password (optional)"
+                                        placeholder="Nova senha (opcional)"
                                     />
                                     <input
                                         type="password"
                                         value={updateForm.data.password_confirmation}
                                         onChange={(event) => updateForm.setData('password_confirmation', event.target.value)}
                                         className="rounded-xl border border-slate-600 bg-slate-950 px-3 py-2 text-slate-100"
-                                        placeholder="Confirm new password"
+                                        placeholder="Confirmar nova senha"
                                     />
 
                                     <div className="sm:col-span-2 flex gap-2">
@@ -361,14 +366,14 @@ export default function AdminDashboard() {
                                             disabled={updateForm.processing}
                                             className="rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-500 disabled:opacity-70"
                                         >
-                                            Save changes
+                                            Salvar alterações
                                         </button>
                                         <button
                                             type="button"
                                             onClick={cancelEditing}
                                             className="rounded-xl border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-800"
                                         >
-                                            Cancel
+                                            Cancelar
                                         </button>
                                     </div>
 
@@ -394,7 +399,7 @@ export default function AdminDashboard() {
                                 as="button"
                                 className="rounded-xl border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-800"
                             >
-                                Logout
+                                Sair
                             </Link>
                         </div>
                     </section>
