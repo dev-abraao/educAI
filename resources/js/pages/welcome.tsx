@@ -16,13 +16,13 @@ export default function Welcome() {
                     <section className="hidden max-w-xl lg:block">
                         <p className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-300">EducAI</p>
                         <h2 className="mt-5 text-5xl font-black leading-tight text-white">
-                            Build better quizzes.
+                            Construa quizzes melhores.
                             <br />
-                            Teach with confidence.
+                            Ensine com confiança.
                         </h2>
                         <p className="mt-5 text-lg text-slate-300">
-                            EducAI helps teachers create focused assessments, monitor student progress, and adapt content
-                            faster.
+                            O EducAI ajuda professores a criar avaliações focadas, acompanhar o progresso dos alunos e
+                            adaptar conteúdo com mais rapidez.
                         </p>
                     </section>
 
@@ -31,10 +31,10 @@ export default function Welcome() {
                         <div className="absolute -bottom-14 -left-14 h-36 w-36 rounded-full bg-amber-400/30 blur-2xl" />
 
                         <div className="relative">
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">EducAI Platform</p>
-                            <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-900">Welcome back.</h1>
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Plataforma EducAI</p>
+                            <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-900">Bem-vindo de volta.</h1>
                             <p className="mt-2 text-sm text-slate-600">
-                                Log in to access your dashboard and start working with your classes.
+                                Faça login para acessar seu painel e começar a trabalhar com suas turmas.
                             </p>
 
                             <div className="mt-6">
