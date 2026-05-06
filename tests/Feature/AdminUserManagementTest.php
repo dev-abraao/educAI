@@ -2,14 +2,6 @@
 
 use App\Models\User;
 
-if (! in_array('sqlite', \PDO::getAvailableDrivers(), true)) {
-    test('admin user management tests require sqlite driver', function () {
-        expect(true)->toBeTrue();
-    })->skip('pdo_sqlite is not installed in this environment.');
-
-    return;
-}
-
 it('allows admin users to access the admin dashboard', function () {
     $this->withoutVite();
 

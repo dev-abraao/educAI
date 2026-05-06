@@ -28,6 +28,8 @@ class UpdateManagedUserRequest extends FormRequest
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class, 'email')->ignore($managedUser)],
             'role' => ['required', Rule::in([UserRole::TEACHER->value, UserRole::STUDENT->value])],
             'password' => ['nullable', 'confirmed', Password::defaults()],
+            'class_ids' => ['nullable', 'array'],
+            'class_ids.*' => ['integer', Rule::exists('classes', 'id')],
         ];
     }
 }
