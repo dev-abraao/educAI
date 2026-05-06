@@ -213,14 +213,12 @@ function TeacherDashboard() {
                           {classItem.active ? 'Ativa' : 'Inativa'}
                         </p>
                       </div>
-                      <a
+                      <Link
                         href={invitePath}
-                        target="_blank"
-                        rel="noreferrer"
                         className="text-indigo-300 text-sm hover:text-indigo-200"
                       >
                         Link de convite
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 );

@@ -1,4 +1,4 @@
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => 
   classes.filter(Boolean).join(' ');
@@ -27,6 +27,7 @@ function SidebarItem({ icon, label, active, onClick }: {
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const role = "Professor";
+  const { flash } = usePage<{ flash: { status?: string; error?: string } }>().props;
 
   return (
     <div className="flex flex-col md:flex-row h-screen w-full overflow-hidden bg-[rgb(2,7,23)] font-sans text-slate-200">
@@ -82,6 +83,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </aside>
       
       <main className="flex-1 bg-[rgb(2,7,23)] overflow-y-auto">
+        {flash.error && (
+          <div className="mx-6 mt-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            {flash.error}
+          </div>
+        )}
+        {flash.status && (
+          <div className="mx-6 mt-4 px-4 py-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm">
+            {flash.status}
+          </div>
+        )}
         {children}
       </main>
     </div>
