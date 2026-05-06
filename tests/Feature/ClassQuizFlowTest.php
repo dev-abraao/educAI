@@ -8,14 +8,6 @@ use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Support\Str;
 
-if (! in_array('sqlite', \PDO::getAvailableDrivers(), true)) {
-    test('class and quiz flow tests require sqlite driver', function () {
-        expect(true)->toBeTrue();
-    })->skip('pdo_sqlite is not installed in this environment.');
-
-    return;
-}
-
 it('allows admin to create classes', function () {
     $admin = User::factory()->admin()->create();
     $teacher = User::factory()->teacher()->create();
