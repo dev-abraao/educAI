@@ -53,9 +53,13 @@ class StudentClassJoinController extends Controller
             ->where('invite_code', $code)
             ->firstOrFail();
 
+        if (! $class->active) {
+            abort(403);
+        }
+
         $student->classes()->syncWithoutDetaching([$class->id]);
 
         return redirect()->route('student.dashboard')
-            ->with('status', 'Class joined successfully.');
+            ->with('status', 'Você entrou na turma com sucesso.');
     }
 }

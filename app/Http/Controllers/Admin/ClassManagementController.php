@@ -21,14 +21,14 @@ class ClassManagementController extends Controller
             'invite_code' => $this->generateInviteCode(),
         ]);
 
-        return back()->with('status', 'Class created successfully.');
+        return back()->with('status', 'Turma criada com sucesso.');
     }
 
     public function destroy(SchoolClass $class): RedirectResponse
     {
         $class->delete();
 
-        return back()->with('status', 'Class deleted successfully.');
+        return back()->with('status', 'Turma removida com sucesso.');
     }
 
     private function generateInviteCode(): string

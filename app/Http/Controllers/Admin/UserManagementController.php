@@ -92,7 +92,7 @@ class UserManagementController extends Controller
 
         $this->applyClassAssignments($user, $classIds);
 
-        return back()->with('status', 'User created successfully.');
+        return back()->with('status', 'Usuário criado com sucesso.');
     }
 
     public function update(UpdateManagedUserRequest $request, User $user): RedirectResponse
@@ -126,7 +126,7 @@ class UserManagementController extends Controller
 
         $this->applyClassAssignments($user, $classIds);
 
-        return back()->with('status', 'User updated successfully.');
+        return back()->with('status', 'Usuário atualizado com sucesso.');
     }
 
     public function destroy(User $user): RedirectResponse
@@ -137,7 +137,7 @@ class UserManagementController extends Controller
 
         $user->delete();
 
-        return back()->with('status', 'User deleted successfully.');
+        return back()->with('status', 'Usuário removido com sucesso.');
     }
 
     /**

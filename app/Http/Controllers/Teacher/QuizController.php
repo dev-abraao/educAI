@@ -42,6 +42,6 @@ class QuizController extends Controller
             }
         });
 
-        return back()->with('status', 'Quiz created successfully.');
+        return back()->with('status', 'Quiz criado com sucesso.');
     }
 }

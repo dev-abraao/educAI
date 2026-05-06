@@ -21,14 +21,19 @@ class StudentQuizController extends Controller
 
         $this->ensureStudentAccess($student, $quiz);
 
-        $quiz->load(['questions.options' => function ($query) {
-            $query->orderBy('position');
-        }]);
+        $quiz->load([
+            'questions' => fn ($q) => $q->orderBy('position'),
+            'questions.options' => fn ($q) => $q->orderBy('position'),
+        ]);
 
         $attempt = QuizAttempt::query()
             ->where('quiz_id', $quiz->id)
             ->where('student_id', $student->id)
             ->first();
+
+        if ($attempt === null && now()->lt($quiz->opens_at)) {
+            abort(403);
+        }
 
         $submitted = $attempt?->submitted_at !== null;
 
@@ -89,19 +94,10 @@ class StudentQuizController extends Controller
             abort(403);
         }
 
-        $attempt = QuizAttempt::query()
-            ->where('quiz_id', $quiz->id)
-            ->where('student_id', $student->id)
-            ->first();
-
-        if ($attempt === null) {
-            QuizAttempt::create([
-                'quiz_id' => $quiz->id,
-                'student_id' => $student->id,
-                'started_at' => $now,
-                'due_at' => $now->copy()->addMinutes($quiz->duration_minutes),
-            ]);
-        }
+        QuizAttempt::firstOrCreate(
+            ['quiz_id' => $quiz->id, 'student_id' => $student->id],
+            ['started_at' => $now, 'due_at' => $now->copy()->addMinutes($quiz->duration_minutes)],
+        );
 
         return redirect()->route('student.quizzes.show', $quiz);
     }
@@ -122,6 +118,12 @@ class StudentQuizController extends Controller
             return redirect()->route('student.quizzes.show', $quiz);
         }
 
+        if (now()->gt($attempt->due_at)) {
+            $this->autoSubmit($attempt, $quiz);
+
+            return redirect()->route('student.quizzes.show', $quiz);
+        }
+
         $data = $request->validate([
             'answers' => ['nullable', 'array'],
             'answers.*.question_id' => ['required', 'integer'],
@@ -131,6 +133,21 @@ class StudentQuizController extends Controller
         $quiz->load(['questions.options']);
 
         $answersByQuestion = collect($data['answers'] ?? [])->keyBy('question_id');
+
+        $this->scoreAndClose($attempt, $quiz, $answersByQuestion);
+
+        return redirect()->route('student.quizzes.show', $quiz)
+            ->with('status', 'Quiz enviado com sucesso.');
+    }
+
+    private function autoSubmit(QuizAttempt $attempt, Quiz $quiz): void
+    {
+        $quiz->load(['questions.options']);
+        $this->scoreAndClose($attempt, $quiz, collect());
+    }
+
+    private function scoreAndClose(QuizAttempt $attempt, Quiz $quiz, \Illuminate\Support\Collection $answersByQuestion): void
+    {
         $score = 0;
         $maxScore = 0;
 
@@ -157,9 +174,6 @@ class StudentQuizController extends Controller
             'score' => $score,
             'max_score' => $maxScore,
         ]);
-
-        return redirect()->route('student.quizzes.show', $quiz)
-            ->with('status', 'Quiz submitted successfully.');
     }
 
     private function ensureStudentAccess(User $student, Quiz $quiz): void
