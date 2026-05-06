@@ -8,11 +8,28 @@ type ManagedUser = {
     name: string;
     email: string;
     role: ManagedRole;
+    class_ids: number[];
     created_at: string;
+};
+
+type ManagedClass = {
+    id: number;
+    name: string;
+    active: boolean;
+    invite_code: string;
+    teacher: { id: number; name: string } | null;
+    created_at: string;
+};
+
+type TeacherOption = {
+    id: number;
+    name: string;
 };
 
 type AdminDashboardProps = {
     users: ManagedUser[];
+    classes: ManagedClass[];
+    teachers: TeacherOption[];
     filters: {
         role: string;
     };
@@ -25,6 +42,7 @@ type StoreUserFormData = {
     role: ManagedRole;
     password: string;
     password_confirmation: string;
+    class_ids: number[];
 };
 
 type UpdateUserFormData = {
@@ -33,10 +51,17 @@ type UpdateUserFormData = {
     role: ManagedRole;
     password: string;
     password_confirmation: string;
+    class_ids: number[];
+};
+
+type StoreClassFormData = {
+    name: string;
+    active: boolean;
+    teacher_id: number | '';
 };
 
 export default function AdminDashboard() {
-    const { users, filters, roles } = usePage<AdminDashboardProps>().props;
+    const { users, classes, teachers, filters, roles } = usePage<AdminDashboardProps>().props;
     const [editingUserId, setEditingUserId] = useState<number | null>(null);
 
     const storeForm = useForm<StoreUserFormData>({
@@ -45,6 +70,7 @@ export default function AdminDashboard() {
         role: 'teacher',
         password: '',
         password_confirmation: '',
+        class_ids: [],
     });
 
     const updateForm = useForm<UpdateUserFormData>({
@@ -53,6 +79,13 @@ export default function AdminDashboard() {
         role: 'teacher',
         password: '',
         password_confirmation: '',
+        class_ids: [],
+    });
+
+    const classForm = useForm<StoreClassFormData>({
+        name: '',
+        active: true,
+        teacher_id: '',
     });
 
     const usersByRole = useMemo(() => {
@@ -95,6 +128,7 @@ export default function AdminDashboard() {
             role: user.role,
             password: '',
             password_confirmation: '',
+            class_ids: user.class_ids ?? [],
         });
     };
 
@@ -126,6 +160,98 @@ export default function AdminDashboard() {
         router.delete(`/admin/users/${userId}`, {
             preserveScroll: true,
         });
+    };
+
+    const submitClass = (event: React.SubmitEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        classForm.post('/admin/classes', {
+            preserveScroll: true,
+            onSuccess: () => {
+                classForm.reset();
+            },
+        });
+    };
+
+    const deleteClass = (classId: number) => {
+        if (!window.confirm('Excluir esta turma?')) {
+            return;
+        }
+
+        router.delete(`/admin/classes/${classId}`, {
+            preserveScroll: true,
+        });
+    };
+
+    const toggleClassSelection = (selected: number[], classId: number) => {
+        if (selected.includes(classId)) {
+            return selected.filter((id) => id !== classId);
+        }
+
+        return [...selected, classId];
+    };
+
+    const canSelectTeacherClass = (classItem: ManagedClass, selected: number[]) => {
+        if (!classItem.teacher) {
+            return true;
+        }
+
+        return selected.includes(classItem.id);
+    };
+
+    const renderClassSelection = (
+        selected: number[],
+        onChange: (next: number[]) => void,
+        role: ManagedRole,
+        error?: string,
+    ) => {
+        if (classes.length === 0) {
+            return <p className="text-sm text-slate-400">Nenhuma turma cadastrada ainda.</p>;
+        }
+
+        return (
+            <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
+                <p className="text-sm font-semibold text-slate-200">Turmas vinculadas</p>
+                <p className="mt-1 text-xs text-slate-400">
+                    {role === 'teacher'
+                        ? 'Somente turmas sem professor podem ser vinculadas.'
+                        : 'Selecione as turmas que este aluno pode acessar.'}
+                </p>
+                <div className="mt-3 space-y-2">
+                    {classes.map((classItem) => {
+                        const isSelected = selected.includes(classItem.id);
+                        const isDisabled =
+                            role === 'teacher' && !canSelectTeacherClass(classItem, selected);
+
+                        return (
+                            <label
+                                key={classItem.id}
+                                className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm ${
+                                    isDisabled
+                                        ? 'border-slate-800 text-slate-500'
+                                        : 'border-slate-700 text-slate-200'
+                                }`}
+                            >
+                                <span className="flex items-center gap-3">
+                                    <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        disabled={isDisabled}
+                                        onChange={() => onChange(toggleClassSelection(selected, classItem.id))}
+                                        className="h-4 w-4 rounded border-slate-500 text-cyan-500"
+                                    />
+                                    <span>{classItem.name}</span>
+                                </span>
+                                {role === 'teacher' && classItem.teacher && !isSelected && (
+                                    <span className="text-xs text-slate-500">Professor: {classItem.teacher.name}</span>
+                                )}
+                            </label>
+                        );
+                    })}
+                </div>
+                {error && <p className="mt-2 text-sm font-medium text-rose-400">{error}</p>}
+            </div>
+        );
     };
 
     return (
@@ -193,6 +319,13 @@ export default function AdminDashboard() {
                                     <p className="mt-1 text-sm font-medium text-rose-400">{storeForm.errors.role}</p>
                                 )}
                             </div>
+
+                            {renderClassSelection(
+                                storeForm.data.class_ids,
+                                (next) => storeForm.setData('class_ids', next),
+                                storeForm.data.role,
+                                storeForm.errors.class_ids,
+                            )}
 
                             <div>
                                 <label className="mb-1.5 block text-sm font-semibold text-slate-200" htmlFor="password">
@@ -345,6 +478,14 @@ export default function AdminDashboard() {
                                             </option>
                                         ))}
                                     </select>
+                                    <div className="sm:col-span-2">
+                                        {renderClassSelection(
+                                            updateForm.data.class_ids,
+                                            (next) => updateForm.setData('class_ids', next),
+                                            updateForm.data.role,
+                                            updateForm.errors.class_ids,
+                                        )}
+                                    </div>
                                     <input
                                         type="password"
                                         value={updateForm.data.password}
@@ -380,12 +521,14 @@ export default function AdminDashboard() {
                                     {(updateForm.errors.name ||
                                         updateForm.errors.email ||
                                         updateForm.errors.role ||
-                                        updateForm.errors.password) && (
+                                        updateForm.errors.password ||
+                                        updateForm.errors.class_ids) && (
                                         <div className="sm:col-span-2 text-sm text-rose-400">
                                             {updateForm.errors.name ||
                                                 updateForm.errors.email ||
                                                 updateForm.errors.role ||
-                                                updateForm.errors.password}
+                                                updateForm.errors.password ||
+                                                updateForm.errors.class_ids}
                                         </div>
                                     )}
                                 </form>
@@ -404,6 +547,160 @@ export default function AdminDashboard() {
                         </div>
                     </section>
                 </div>
+
+                <section className="mx-auto mt-10 grid w-full max-w-6xl gap-8 lg:grid-cols-[1.1fr_1.9fr]">
+                    <div className="rounded-3xl border border-slate-700 bg-slate-900/85 p-6 shadow-xl">
+                        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-300">Turmas</p>
+                        <h2 className="mt-3 text-2xl font-black">Criar nova turma</h2>
+                        <p className="mt-2 text-sm text-slate-300">Defina o nome e vincule um professor.</p>
+
+                        <form onSubmit={submitClass} className="mt-6 space-y-4">
+                            <div>
+                                <label className="mb-1.5 block text-sm font-semibold text-slate-200" htmlFor="class_name">
+                                    Nome da turma
+                                </label>
+                                <input
+                                    id="class_name"
+                                    value={classForm.data.name}
+                                    onChange={(event) => classForm.setData('name', event.target.value)}
+                                    className="w-full rounded-xl border border-slate-600 bg-slate-950 px-4 py-2.5 text-slate-100 outline-none ring-amber-500 focus:ring-2"
+                                    required
+                                />
+                                {classForm.errors.name && (
+                                    <p className="mt-1 text-sm font-medium text-rose-400">{classForm.errors.name}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="mb-1.5 block text-sm font-semibold text-slate-200" htmlFor="teacher_id">
+                                    Professor (opcional)
+                                </label>
+                                <select
+                                    id="teacher_id"
+                                    value={classForm.data.teacher_id}
+                                    onChange={(event) =>
+                                        classForm.setData(
+                                            'teacher_id',
+                                            event.target.value ? Number(event.target.value) : '',
+                                        )
+                                    }
+                                    className="w-full rounded-xl border border-slate-600 bg-slate-950 px-4 py-2.5 text-slate-100 outline-none ring-amber-500 focus:ring-2"
+                                >
+                                    <option value="">Sem professor</option>
+                                    {teachers.map((teacher) => (
+                                        <option key={teacher.id} value={teacher.id}>
+                                            {teacher.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                {classForm.errors.teacher_id && (
+                                    <p className="mt-1 text-sm font-medium text-rose-400">
+                                        {classForm.errors.teacher_id}
+                                    </p>
+                                )}
+                            </div>
+
+                            <label className="flex items-center gap-3 text-sm text-slate-200">
+                                <input
+                                    type="checkbox"
+                                    checked={classForm.data.active}
+                                    onChange={(event) => classForm.setData('active', event.target.checked)}
+                                    className="h-4 w-4 rounded border-slate-500 text-amber-500"
+                                />
+                                Turma ativa
+                            </label>
+
+                            <button
+                                type="submit"
+                                disabled={classForm.processing}
+                                className="w-full rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                                {classForm.processing ? 'Criando...' : 'Criar turma'}
+                            </button>
+                        </form>
+                    </div>
+
+                    <div className="rounded-3xl border border-slate-700 bg-slate-900/85 p-6 shadow-xl">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-300">Turmas</p>
+                                <h2 className="mt-2 text-2xl font-black">Gerenciar turmas</h2>
+                            </div>
+                            <span className="rounded-lg bg-slate-800 px-3 py-1 text-sm text-slate-300">
+                                Total: {classes.length}
+                            </span>
+                        </div>
+
+                        <div className="mt-6 overflow-x-auto">
+                            <table className="w-full min-w-[680px] text-left text-sm">
+                                <thead>
+                                    <tr className="border-b border-slate-700 text-slate-400">
+                                        <th className="py-3 pr-3">Turma</th>
+                                        <th className="py-3 pr-3">Professor</th>
+                                        <th className="py-3 pr-3">Ativa</th>
+                                        <th className="py-3 pr-3">Convite</th>
+                                        <th className="py-3 pr-3">Criada em</th>
+                                        <th className="py-3">Acoes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {classes.map((classItem) => {
+                                        const invitePath = `/student/classes/join/${classItem.invite_code}`;
+
+                                        return (
+                                            <tr key={classItem.id} className="border-b border-slate-800 align-top">
+                                                <td className="py-3 pr-3 font-medium text-slate-200">{classItem.name}</td>
+                                                <td className="py-3 pr-3 text-slate-300">
+                                                    {classItem.teacher ? classItem.teacher.name : 'Sem professor'}
+                                                </td>
+                                                <td className="py-3 pr-3">
+                                                    <span
+                                                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                                            classItem.active
+                                                                ? 'bg-emerald-500/10 text-emerald-300'
+                                                                : 'bg-slate-800 text-slate-400'
+                                                        }`}
+                                                    >
+                                                        {classItem.active ? 'Ativa' : 'Inativa'}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 pr-3">
+                                                    <a
+                                                        href={invitePath}
+                                                        className="text-amber-300 hover:text-amber-200"
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                    >
+                                                        {invitePath}
+                                                    </a>
+                                                </td>
+                                                <td className="py-3 pr-3">
+                                                    {new Date(classItem.created_at).toLocaleDateString()}
+                                                </td>
+                                                <td className="py-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => deleteClass(classItem.id)}
+                                                        className="rounded-lg border border-rose-500/50 px-2.5 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/10"
+                                                    >
+                                                        Excluir
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                    {classes.length === 0 && (
+                                        <tr>
+                                            <td colSpan={6} className="py-6 text-center text-slate-400">
+                                                Nenhuma turma cadastrada ainda.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
             </main>
         </>
     );
