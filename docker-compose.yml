@@ -1,0 +1,56 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: educai-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+      - "5173:5173"
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: educai
+      DB_USERNAME: educai
+      DB_PASSWORD: educai
+    volumes:
+      - .:/app
+      - vendor:/app/vendor
+      - node_modules:/app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: serve
+    networks:
+      - educai
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: educai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: educai
+      POSTGRES_USER: educai
+      POSTGRES_PASSWORD: educai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U educai -d educai"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - educai
+
+networks:
+  educai:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  vendor:
+  node_modules:
