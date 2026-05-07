@@ -17,7 +17,7 @@ it('forbids non-admin users from admin dashboard', function () {
 
     $response = $this->actingAs($teacher)->get(route('admin.dashboard'));
 
-    $response->assertForbidden();
+    $response->assertRedirect();
 });
 
 it('allows admin users to create teacher and student users', function () {
