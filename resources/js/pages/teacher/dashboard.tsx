@@ -1,5 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { DashboardShell } from '../../components/auth/DashboardShell';
 
 type TeacherClass = {
@@ -58,6 +58,8 @@ const defaultQuestion: QuizFormQuestion = {
 
 function TeacherDashboard() {
   const { classes, quizzes } = usePage<TeacherDashboardProps>().props;
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+
   const totalStudents = useMemo(
     () => classes.reduce((sum, classItem) => sum + classItem.students_count, 0),
     [classes],
@@ -150,14 +152,22 @@ function TeacherDashboard() {
     });
   };
 
+  const copyInviteLink = (classItem: TeacherClass) => {
+    const fullUrl = `${window.location.origin}/student/classes/join/${classItem.invite_code}`;
+    navigator.clipboard.writeText(fullUrl).then(() => {
+      setCopiedId(classItem.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
+
   return (
     <DashboardShell>
       <Head title="Painel do Professor" />
       <div className="space-y-8 p-6 bg-[rgb(2,7,23)] min-h-screen font-sans">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-white">Visao Geral</h2>
-            <p className="text-slate-400 mt-1">Gerencie suas avaliacoes, turmas e convites.</p>
+            <h2 className="text-2xl font-bold text-white">Visão Geral</h2>
+            <p className="text-slate-400 mt-1">Gerencie suas avaliações, turmas e convites.</p>
           </div>
           <Link
             href="/teacher/dashboard#quiz-form"
@@ -198,8 +208,6 @@ function TeacherDashboard() {
             <h3 className="text-lg font-bold text-white mb-4">Suas turmas</h3>
             <div className="space-y-3">
               {classes.map((classItem) => {
-                const invitePath = `/student/classes/join/${classItem.invite_code}`;
-
                 return (
                   <div
                     key={classItem.id}
@@ -213,12 +221,29 @@ function TeacherDashboard() {
                           {classItem.active ? 'Ativa' : 'Inativa'}
                         </p>
                       </div>
-                      <Link
-                        href={invitePath}
-                        className="text-indigo-300 text-sm hover:text-indigo-200"
+                      <button
+                        type="button"
+                        onClick={() => copyInviteLink(classItem)}
+                        className={`text-sm flex items-center transition-colors ${
+                          copiedId === classItem.id ? 'text-emerald-400' : 'text-indigo-300 hover:text-indigo-200'
+                        }`}
                       >
-                        Link de convite
-                      </Link>
+                        {copiedId === classItem.id ? (
+                          <>
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Copiado!
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            Copiar link
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
                 );
@@ -237,7 +262,7 @@ function TeacherDashboard() {
               <table className="w-full text-sm text-left">
                 <thead className="text-xs text-slate-400 uppercase bg-slate-900/80 border-b border-slate-800">
                   <tr>
-                    <th className="px-4 py-3">Titulo</th>
+                    <th className="px-4 py-3">Título</th>
                     <th className="px-4 py-3">Turma</th>
                     <th className="px-4 py-3">Abertura</th>
                     <th className="px-4 py-3">Fechamento</th>
@@ -278,7 +303,7 @@ function TeacherDashboard() {
           <h3 className="text-lg font-bold text-white mb-4">Criar novo quiz</h3>
           {classes.length === 0 ? (
             <p className="text-sm text-slate-400">
-              Voce precisa de uma turma para criar um quiz.
+              Você precisa de uma turma para criar um quiz.
             </p>
           ) : (
             <form onSubmit={submitQuiz} className="space-y-6">
@@ -305,7 +330,7 @@ function TeacherDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-200">Duracao (minutos)</label>
+                  <label className="block text-sm font-semibold text-slate-200">Duração (minutos)</label>
                   <input
                     type="number"
                     min={1}
@@ -324,7 +349,7 @@ function TeacherDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-200">Titulo</label>
+                  <label className="block text-sm font-semibold text-slate-200">Título</label>
                   <input
                     value={quizForm.data.title}
                     onChange={(event) => quizForm.setData('title', event.target.value)}
@@ -337,7 +362,7 @@ function TeacherDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-200">Descricao</label>
+                  <label className="block text-sm font-semibold text-slate-200">Descrição</label>
                   <input
                     value={quizForm.data.description}
                     onChange={(event) => quizForm.setData('description', event.target.value)}
@@ -376,13 +401,13 @@ function TeacherDashboard() {
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-base font-semibold text-white">Questoes</h4>
+                  <h4 className="text-base font-semibold text-white">Questões</h4>
                   <button
                     type="button"
                     onClick={addQuestion}
                     className="rounded-lg border border-indigo-500/40 px-3 py-1 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/10"
                   >
-                    Adicionar questao
+                    Adicionar questão
                   </button>
                 </div>
 
@@ -393,7 +418,7 @@ function TeacherDashboard() {
                   >
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-semibold text-slate-200">
-                        Questao {questionIndex + 1}
+                        Questão {questionIndex + 1}
                       </p>
                       <button
                         type="button"
@@ -410,7 +435,7 @@ function TeacherDashboard() {
                         onChange={(event) =>
                           updateQuestion(questionIndex, { text: event.target.value })
                         }
-                        placeholder="Enunciado da questao"
+                        placeholder="Enunciado da questão"
                         className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100"
                         required
                       />
