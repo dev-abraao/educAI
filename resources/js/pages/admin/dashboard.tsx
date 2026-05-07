@@ -63,6 +63,7 @@ type StoreClassFormData = {
 export default function AdminDashboard() {
     const { users, classes, teachers, filters, roles } = usePage<AdminDashboardProps>().props;
     const [editingUserId, setEditingUserId] = useState<number | null>(null);
+    const [copiedId, setCopiedId] = useState<number | null>(null);
 
     const storeForm = useForm<StoreUserFormData>({
         name: '',
@@ -197,6 +198,14 @@ export default function AdminDashboard() {
         }
 
         return selected.includes(classItem.id);
+    };
+
+    const copyInviteLink = (classItem: ManagedClass) => {
+        const fullUrl = `${window.location.origin}/student/classes/join/${classItem.invite_code}`;
+        navigator.clipboard.writeText(fullUrl).then(() => {
+            setCopiedId(classItem.id);
+            setTimeout(() => setCopiedId(null), 2000);
+        });
     };
 
     const renderClassSelection = (
@@ -640,13 +649,11 @@ export default function AdminDashboard() {
                                         <th className="py-3 pr-3">Ativa</th>
                                         <th className="py-3 pr-3">Convite</th>
                                         <th className="py-3 pr-3">Criada em</th>
-                                        <th className="py-3">Acoes</th>
+                                        <th className="py-3">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {classes.map((classItem) => {
-                                        const invitePath = `/student/classes/join/${classItem.invite_code}`;
-
                                         return (
                                             <tr key={classItem.id} className="border-b border-slate-800 align-top">
                                                 <td className="py-3 pr-3 font-medium text-slate-200">{classItem.name}</td>
@@ -665,14 +672,31 @@ export default function AdminDashboard() {
                                                     </span>
                                                 </td>
                                                 <td className="py-3 pr-3">
-                                                    <a
-                                                        href={invitePath}
-                                                        className="text-amber-300 hover:text-amber-200"
-                                                        target="_blank"
-                                                        rel="noreferrer"
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => copyInviteLink(classItem)}
+                                                        className={`flex items-center transition-colors ${
+                                                            copiedId === classItem.id
+                                                                ? 'text-emerald-400'
+                                                                : 'text-amber-300 hover:text-amber-200'
+                                                        }`}
                                                     >
-                                                        {invitePath}
-                                                    </a>
+                                                        {copiedId === classItem.id ? (
+                                                            <>
+                                                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                                Copiado!
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                                </svg>
+                                                                Copiar link
+                                                            </>
+                                                        )}
+                                                    </button>
                                                 </td>
                                                 <td className="py-3 pr-3">
                                                     {new Date(classItem.created_at).toLocaleDateString()}
