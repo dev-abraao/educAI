@@ -152,11 +152,8 @@ Adicione sua chave no `.env`:
 ```
 OPENAI_API_KEY=sk-proj-...
 ```
-
-```bash
-docker compose up --build
-```
-
-Acesse em `http://localhost:8000`.
-
 ---
+
+## Documentação - Discovery e Arquitetura do Problema
+
+**Link Docs.:** (https://docs.google.com/document/d/1H20Oe9UeEx0VR0v9BRDUt1FyUsuOPV7qkIx-pvDsmAo/edit?usp=sharing)
