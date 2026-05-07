@@ -27,7 +27,8 @@ done
 echo "==> PostgreSQL disponível"
 
 echo "==> Rodando migrations"
-php artisan migrate --force || true
+php artisan migrate --force --seed || true
+
 
 case "$1" in
     serve)
