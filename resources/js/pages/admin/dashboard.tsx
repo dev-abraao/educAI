@@ -1,7 +1,7 @@
 import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
-import { FormEvent, useMemo, useState } from 'react';
+import { Plus, Users, GraduationCap, School } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Plus, Edit2, Trash2, Users, GraduationCap, School, Clipboard, CheckCircle2 } from 'lucide-react';
 import { DashboardShell } from '@/components/auth/DashboardShell';
 
 type ManagedRole = 'teacher' | 'student';
@@ -74,6 +74,7 @@ export default function AdminDashboard() {
     const usersByRole = useMemo(() => {
     const teacherCount = users.filter((user) => user.role === 'teacher').length;
     const studentCount = users.filter((user) => user.role === 'student').length;
+
     return {
         teacher: teacherCount,
         student: studentCount,
@@ -88,9 +89,20 @@ export default function AdminDashboard() {
     });
 
     const chartData = useMemo(() => {
-        return classes.map(c => ({
+        // Mantém o render determinístico: gera um valor “pseudo-aleatório” com base no id/nome.
+        const hashToRange = (input: string) => {
+            let hash = 0;
+
+            for (let i = 0; i < input.length; i += 1) {
+                hash = (hash * 31 + input.charCodeAt(i)) % 100000;
+            }
+
+            return (hash % 41) + 60; // [60..100]
+        };
+
+        return classes.map((c) => ({
             name: c.name,
-            media: Math.floor(Math.random() * 40) + 60 
+            media: hashToRange(`${c.id}-${c.name}`),
         }));
     }, [classes]);
 

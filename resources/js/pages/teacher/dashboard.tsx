@@ -111,13 +111,17 @@ function TeacherDashboard() {
 
   const removeOption = (questionIndex: number, optionIndex: number) => {
     const next = [...quizForm.data.questions];
+
     if (next[questionIndex].options.length <= 2) {
       return;
     }
+
     const filtered = next[questionIndex].options.filter((_, idx) => idx !== optionIndex);
+
     if (!filtered.some((option) => option.is_correct)) {
       filtered[0] = { ...filtered[0], is_correct: true };
     }
+
     next[questionIndex] = {
       ...next[questionIndex],
       options: filtered,
