@@ -442,8 +442,12 @@ export default function AdminDashboard() {
                 <div className="grid lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 p-6 bg-slate-900/50 border border-slate-800 rounded-2xl backdrop-blur-sm">
                         <h3 className="font-bold text-white mb-6 flex items-center gap-2">
-                            <School className="w-5 h-5 text-cyan-500" />
-                            Desempenho por Turma
+                            <div>
+                                <div className='flex items-center gap-2'>
+                                    <School className="w-5 h-5 text-cyan-500" /><p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">Relatório</p>
+                                </div>
+                                <h2 className="mt-2 text-2xl font-black">Desempenho por Turma</h2>
+                            </div>  
                         </h3>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
@@ -647,173 +651,154 @@ export default function AdminDashboard() {
                                 </form>
                             </div>
                         )}
-
-                        <div className="mt-8">
-                            <Link
-                                href="/logout"
-                                method="post"
-                                as="button"
-                                className="rounded-xl border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-800"
-                            >
-                                Sair
-                            </Link>
-                        </div>
                     </section>
                 </div>
 
-                <section className="mt-10 grid gap-8 lg:grid-cols-[1.1fr_1.9fr]">
-                    <div className="rounded-3xl border border-slate-700 bg-slate-900/85 p-6 shadow-xl">
-                        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-300">Turmas</p>
-                        <h2 className="mt-3 text-2xl font-black">Criar nova turma</h2>
-                        <p className="mt-2 text-sm text-slate-300">Defina o nome e vincule um professor.</p>
+                <section className="mt-10">
+    <div className="rounded-3xl border border-slate-700 bg-slate-900/85 p-6 shadow-xl">
+        {/* Cabeçalho da Seção */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-6">
+            <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-300">Painel</p>
+                <h2 className="mt-2 text-3xl font-black">Gerenciar turmas</h2>
+            </div>
+            
+            <div className="flex items-center gap-4">
+                <span className="hidden rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-300 sm:block">
+                    Total: {classes.length}
+                </span>
+                <button
+                    onClick={() => setIsOpen(true)} // Abre o Modal
+                    className="flex items-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-amber-500 hover:shadow-lg hover:shadow-amber-900/20"
+                >
+                    <span className="text-lg">+</span> Criar nova turma
+                </button>
+            </div>
+        </div>
 
-                        <form onSubmit={submitClass} className="mt-6 space-y-4">
-                            <div>
-                                <label className="mb-1.5 block text-sm font-semibold text-slate-200" htmlFor="class_name">
-                                    Nome da turma
-                                </label>
-                                <input
-                                    id="class_name"
-                                    value={classForm.data.name}
-                                    onChange={(event) => classForm.setData('name', event.target.value)}
-                                    className="w-full rounded-xl border border-slate-600 bg-slate-950 px-4 py-2.5 text-slate-100 outline-none ring-amber-500 focus:ring-2"
-                                    required
-                                />
-                                {classForm.errors.name && (
-                                    <p className="mt-1 text-sm font-medium text-rose-400">{classForm.errors.name}</p>
-                                )}
-                            </div>
-
-                            <div>
-                                <label className="mb-1.5 block text-sm font-semibold text-slate-200" htmlFor="teacher_id">
-                                    Professor (opcional)
-                                </label>
-                                <select
-                                    id="teacher_id"
-                                    value={classForm.data.teacher_id}
-                                    onChange={(event) =>
-                                        classForm.setData(
-                                            'teacher_id',
-                                            event.target.value ? Number(event.target.value) : '',
-                                        )
-                                    }
-                                    className="w-full rounded-xl border border-slate-600 bg-slate-950 px-4 py-2.5 text-slate-100 outline-none ring-amber-500 focus:ring-2"
+        <div className="mt-6 overflow-x-auto">
+            <table className="w-full min-w-[680px] text-left text-sm">
+                <thead>
+                    <tr className="border-b border-slate-700 text-slate-400">
+                        <th className="py-4 pr-3">Turma</th>
+                        <th className="py-4 pr-3">Professor</th>
+                        <th className="py-4 pr-3">Ativa</th>
+                        <th className="py-4 pr-3">Convite</th>
+                        <th className="py-4 pr-3">Criada em</th>
+                        <th className="py-4">Ações</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                    {classes.map((classItem) => (
+                        <tr key={classItem.id} className="group hover:bg-slate-800/30">
+                            <td className="py-4 pr-3 font-medium text-slate-200">{classItem.name}</td>
+                            <td className="py-4 pr-3 text-slate-300">
+                                {classItem.teacher ? classItem.teacher.name : 'Sem professor'}
+                            </td>
+                            <td className="py-4 pr-3">
+                                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                    classItem.active ? 'bg-emerald-500/10 text-emerald-300' : 'bg-slate-800 text-slate-400'
+                                }`}>
+                                    {classItem.active ? 'Ativa' : 'Inativa'}
+                                </span>
+                            </td>
+                            <td className="py-4 pr-3">
+                                <a href={`/student/classes/join/${classItem.invite_code}`} className="text-amber-300/70 hover:text-amber-200 truncate block max-w-[150px]">
+                                    {classItem.invite_code}
+                                </a>
+                            </td>
+                            <td className="py-4 pr-3 text-slate-400">
+                                {new Date(classItem.created_at).toLocaleDateString()}
+                            </td>
+                            <td className="py-4">
+                                <button
+                                    onClick={() => deleteClass(classItem.id)}
+                                    className="rounded-lg border border-rose-500/30 px-3 py-1.5 text-xs font-semibold text-rose-400 transition-colors hover:bg-rose-500 hover:text-white"
                                 >
-                                    <option value="">Sem professor</option>
-                                    {teachers.map((teacher) => (
-                                        <option key={teacher.id} value={teacher.id}>
-                                            {teacher.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                {classForm.errors.teacher_id && (
-                                    <p className="mt-1 text-sm font-medium text-rose-400">
-                                        {classForm.errors.teacher_id}
-                                    </p>
-                                )}
-                            </div>
+                                    Excluir
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{isOpen && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+        <div className="w-full max-w-md rounded-3xl border border-slate-700 bg-slate-900 p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-black text-white">Criar nova turma</h2>
+                <button 
+                    onClick={() => setIsOpen(false)}
+                    className="text-slate-400 hover:text-white text-2xl"
+                >
+                    &times;
+                </button>
+            </div>
+            <p className="mt-2 text-sm text-slate-400">Defina os detalhes da nova turma abaixo.</p>
 
-                            <label className="flex items-center gap-3 text-sm text-slate-200">
-                                <input
-                                    type="checkbox"
-                                    checked={classForm.data.active}
-                                    onChange={(event) => classForm.setData('active', event.target.checked)}
-                                    className="h-4 w-4 rounded border-slate-500 text-amber-500"
-                                />
-                                Turma ativa
-                            </label>
+            <form onSubmit={(e) => { 
+                submitClass(e); 
+                if(classForm.wasSuccessful) setIsOpen(false); 
+            }} className="mt-8 space-y-5">
+                <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-200">Nome da turma</label>
+                    <input
+                        value={classForm.data.name}
+                        onChange={(e) => classForm.setData('name', e.target.value)}
+                        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:ring-2 focus:ring-amber-500"
+                        placeholder="Digite o nome da turma"
+                        required
+                    />
+                </div>
 
-                            <button
-                                type="submit"
-                                disabled={classForm.processing}
-                                className="w-full rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-70"
-                            >
-                                {classForm.processing ? 'Criando...' : 'Criar turma'}
-                            </button>
-                        </form>
-                    </div>
+                <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-200">Professor (opcional)</label>
+                    <select
+                        value={classForm.data.teacher_id}
+                        onChange={(e) => classForm.setData(
+        'teacher_id',
+        e.target.value === "" ? "" : Number(e.target.value)
+    )}
+                        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:ring-2 focus:ring-amber-500"
+                    >
+                        <option value="">Sem professor</option>
+                        {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select>
+                </div>
 
-                    <div className="rounded-3xl border border-slate-700 bg-slate-900/85 p-6 shadow-xl">
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                            <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-300">Turmas</p>
-                                <h2 className="mt-2 text-2xl font-black">Gerenciar turmas</h2>
-                            </div>
-                            <span className="rounded-lg bg-slate-800 px-3 py-1 text-sm text-slate-300">
-                                Total: {classes.length}
-                            </span>
-                        </div>
+                <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-200">
+                    <input
+                        type="checkbox"
+                        checked={classForm.data.active}
+                        onChange={(e) => classForm.setData('active', e.target.checked)}
+                        className="h-5 w-5 rounded border-slate-600 bg-slate-950 text-amber-500 focus:ring-offset-slate-900"
+                    />
+                    Turma ativa imediatamente
+                </label>
 
-                        <div className="mt-6 overflow-x-auto">
-                            <table className="w-full min-w-[680px] text-left text-sm">
-                                <thead>
-                                    <tr className="border-b border-slate-700 text-slate-400">
-                                        <th className="py-3 pr-3">Turma</th>
-                                        <th className="py-3 pr-3">Professor</th>
-                                        <th className="py-3 pr-3">Ativa</th>
-                                        <th className="py-3 pr-3">Convite</th>
-                                        <th className="py-3 pr-3">Criada em</th>
-                                        <th className="py-3">Acoes</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {classes.map((classItem) => {
-                                        const invitePath = `/student/classes/join/${classItem.invite_code}`;
-
-                                        return (
-                                            <tr key={classItem.id} className="border-b border-slate-800 align-top">
-                                                <td className="py-3 pr-3 font-medium text-slate-200">{classItem.name}</td>
-                                                <td className="py-3 pr-3 text-slate-300">
-                                                    {classItem.teacher ? classItem.teacher.name : 'Sem professor'}
-                                                </td>
-                                                <td className="py-3 pr-3">
-                                                    <span
-                                                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                                                            classItem.active
-                                                                ? 'bg-emerald-500/10 text-emerald-300'
-                                                                : 'bg-slate-800 text-slate-400'
-                                                        }`}
-                                                    >
-                                                        {classItem.active ? 'Ativa' : 'Inativa'}
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 pr-3">
-                                                    <a
-                                                        href={invitePath}
-                                                        className="text-amber-300 hover:text-amber-200"
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                    >
-                                                        {invitePath}
-                                                    </a>
-                                                </td>
-                                                <td className="py-3 pr-3">
-                                                    {new Date(classItem.created_at).toLocaleDateString()}
-                                                </td>
-                                                <td className="py-3">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => deleteClass(classItem.id)}
-                                                        className="rounded-lg border border-rose-500/50 px-2.5 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/10"
-                                                    >
-                                                        Excluir
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                    {classes.length === 0 && (
-                                        <tr>
-                                            <td colSpan={6} className="py-6 text-center text-slate-400">
-                                                Nenhuma turma cadastrada ainda.
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
+                <div className="mt-8 flex gap-3">
+                    <button
+                        type="button"
+                        onClick={() => setIsOpen(false)}
+                        className="flex-1 rounded-xl bg-slate-800 px-4 py-3 text-sm font-bold text-slate-200 hover:bg-slate-700"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={classForm.processing}
+                        className="flex-[2] rounded-xl bg-amber-600 px-4 py-3 text-sm font-bold text-white hover:bg-amber-500 disabled:opacity-50"
+                    >
+                        {classForm.processing ? 'Salvando...' : 'Confirmar e Criar'}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+)}
             </div>
         </DashboardShell>
     );
