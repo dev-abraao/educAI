@@ -57,6 +57,7 @@ export default function StudentQuiz() {
         answers.forEach((answer) => {
             selectionMap[answer.question_id] = answer.option_id;
         });
+
         return selectionMap;
     }, [answers]);
 
@@ -65,7 +66,9 @@ export default function StudentQuiz() {
         if (!attempt || attempt.submitted_at) {
             return null;
         }
+
         const dueTime = new Date(attempt.due_at).getTime();
+
         return Math.max(0, Math.ceil((dueTime - Date.now()) / 1000));
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,6 +81,7 @@ export default function StudentQuiz() {
     const answerLookup = useMemo(() => {
         const map = new Map<number, Answer>();
         answers.forEach((answer) => map.set(answer.question_id, answer));
+
         return map;
     }, [answers]);
 

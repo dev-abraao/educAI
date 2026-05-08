@@ -1,7 +1,19 @@
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
+import { Plus, Users, GraduationCap, School } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { DashboardShell } from '@/components/auth/DashboardShell';
 
 type ManagedRole = 'teacher' | 'student';
+
+type StoreUserFormData = {
+    name: string;
+    email: string;
+    role: ManagedRole;
+    password: string;
+    password_confirmation: string;
+    class_ids: number[];
+};
 
 type ManagedUser = {
     id: number;
@@ -21,6 +33,12 @@ type ManagedClass = {
     created_at: string;
 };
 
+type StoreClassFormData = {
+    name: string;
+    active: boolean;
+    teacher_id: number | '';
+};
+
 type TeacherOption = {
     id: number;
     name: string;
@@ -36,15 +54,6 @@ type AdminDashboardProps = {
     roles: ManagedRole[];
 };
 
-type StoreUserFormData = {
-    name: string;
-    email: string;
-    role: ManagedRole;
-    password: string;
-    password_confirmation: string;
-    class_ids: number[];
-};
-
 type UpdateUserFormData = {
     name: string;
     email: string;
@@ -54,15 +63,120 @@ type UpdateUserFormData = {
     class_ids: number[];
 };
 
-type StoreClassFormData = {
-    name: string;
-    active: boolean;
-    teacher_id: number | '';
-};
 
 export default function AdminDashboard() {
     const { users, classes, teachers, filters, roles } = usePage<AdminDashboardProps>().props;
     const [editingUserId, setEditingUserId] = useState<number | null>(null);
+    const [isOpen, setIsOpen] = useState(false);
+
+    const closeModal = () => setIsOpen(false);
+
+    const usersByRole = useMemo(() => {
+    const teacherCount = users.filter((user) => user.role === 'teacher').length;
+    const studentCount = users.filter((user) => user.role === 'student').length;
+
+    return {
+        teacher: teacherCount,
+        student: studentCount,
+        total: users.length
+    };
+}, [users]);
+
+    const classForm = useForm<StoreClassFormData>({
+        name: '',
+        active: true,
+        teacher_id: '',
+    });
+
+    const chartData = useMemo(() => {
+        // Mantém o render determinístico: gera um valor “pseudo-aleatório” com base no id/nome.
+        const hashToRange = (input: string) => {
+            let hash = 0;
+
+            for (let i = 0; i < input.length; i += 1) {
+                hash = (hash * 31 + input.charCodeAt(i)) % 100000;
+            }
+
+            return (hash % 41) + 60; // [60..100]
+        };
+
+        return classes.map((c) => ({
+            name: c.name,
+            media: hashToRange(`${c.id}-${c.name}`),
+        }));
+    }, [classes]);
+
+    const submitClass = (event: React.SubmitEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        classForm.post('/admin/classes', {
+            preserveScroll: true,
+            onSuccess: () => {
+                classForm.reset();
+            },
+        });
+    };
+
+    const toggleClassSelection = (selected: number[], classId: number) => {
+        if (selected.includes(classId)) {
+            return selected.filter((id) => id !== classId);
+        }
+
+        return [...selected, classId];
+    };
+
+    const canSelectTeacherClass = (classItem: ManagedClass, selected: number[]) => {
+        if (!classItem.teacher) {
+            return true;
+        }
+
+        return selected.includes(classItem.id);
+    }
+
+    const deleteUser = (userId: number) => {
+        if (!window.confirm('Excluir este usuário?')) {
+            return;
+        }
+
+        router.delete(`/admin/users/${userId}`, {
+            preserveScroll: true,
+        });
+    };
+
+    const startEditing = (user: ManagedUser) => {
+        setEditingUserId(user.id);
+        updateForm.clearErrors();
+        updateForm.setData({
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            password: '',
+            password_confirmation: '',
+            class_ids: user.class_ids ?? [],
+        });
+    };
+
+    const deleteClass = (classId: number) => {
+        if (!window.confirm('Excluir esta turma?')) {
+            return;
+        }
+
+        router.delete(`/admin/classes/${classId}`, {
+            preserveScroll: true,
+        });
+    };
+
+    const onFilterChange = (role: string) => {
+        router.get(
+            '/admin/dashboard',
+            { role: role || undefined },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            },
+        );
+    };
 
     const storeForm = useForm<StoreUserFormData>({
         name: '',
@@ -81,57 +195,7 @@ export default function AdminDashboard() {
         password_confirmation: '',
         class_ids: [],
     });
-
-    const classForm = useForm<StoreClassFormData>({
-        name: '',
-        active: true,
-        teacher_id: '',
-    });
-
-    const usersByRole = useMemo(() => {
-        return {
-            teacher: users.filter((user) => user.role === 'teacher').length,
-            student: users.filter((user) => user.role === 'student').length,
-        };
-    }, [users]);
-
-    const onFilterChange = (role: string) => {
-        router.get(
-            '/admin/dashboard',
-            { role: role || undefined },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-            },
-        );
-    };
-
-    const submitStore = (event: React.SubmitEvent<HTMLFormElement>) => {
-        event.preventDefault();
-
-        storeForm.post('/admin/users', {
-            preserveScroll: true,
-            onSuccess: () => {
-                storeForm.reset();
-                storeForm.setData('role', 'teacher');
-            },
-        });
-    };
-
-    const startEditing = (user: ManagedUser) => {
-        setEditingUserId(user.id);
-        updateForm.clearErrors();
-        updateForm.setData({
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            password: '',
-            password_confirmation: '',
-            class_ids: user.class_ids ?? [],
-        });
-    };
-
+    
     const cancelEditing = () => {
         setEditingUserId(null);
         updateForm.reset();
@@ -152,51 +216,16 @@ export default function AdminDashboard() {
         });
     };
 
-    const deleteUser = (userId: number) => {
-        if (!window.confirm('Excluir este usuário?')) {
-            return;
-        }
-
-        router.delete(`/admin/users/${userId}`, {
-            preserveScroll: true,
-        });
-    };
-
-    const submitClass = (event: React.SubmitEvent<HTMLFormElement>) => {
+    const submitStore = (event: React.SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        classForm.post('/admin/classes', {
+        storeForm.post('/admin/users', {
             preserveScroll: true,
             onSuccess: () => {
-                classForm.reset();
+                storeForm.reset();
+                storeForm.setData('role', 'teacher');
             },
         });
-    };
-
-    const deleteClass = (classId: number) => {
-        if (!window.confirm('Excluir esta turma?')) {
-            return;
-        }
-
-        router.delete(`/admin/classes/${classId}`, {
-            preserveScroll: true,
-        });
-    };
-
-    const toggleClassSelection = (selected: number[], classId: number) => {
-        if (selected.includes(classId)) {
-            return selected.filter((id) => id !== classId);
-        }
-
-        return [...selected, classId];
-    };
-
-    const canSelectTeacherClass = (classItem: ManagedClass, selected: number[]) => {
-        if (!classItem.teacher) {
-            return true;
-        }
-
-        return selected.includes(classItem.id);
     };
 
     const renderClassSelection = (
@@ -255,20 +284,47 @@ export default function AdminDashboard() {
     };
 
     return (
-        <>
-            <Head title="Painel de Administração" />
-            <main className="min-h-screen bg-slate-950 px-4 py-10 text-white sm:px-8">
-                <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.1fr_1.9fr]">
-                    <section className="rounded-3xl border border-slate-700 bg-slate-900/85 p-6 shadow-xl">
-                        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">Painel de administração</p>
-                        <h1 className="mt-3 text-2xl font-black">Registrar Usuários</h1>
-                        <p className="mt-2 text-sm text-slate-300">Crie contas de professor e aluno a partir daqui.</p>
+        <DashboardShell>
+            <div className="space-y-8 p-8 bg-slate-950 min-h-screen text-slate-200">
+                <Head title="Admin | QuizFlow" />
+                
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                    <div>
+                        <h2 className="text-3xl font-extrabold text-white tracking-tight">Painel de Administração</h2>
+                        <p className="text-slate-400 mt-1 text-sm">Gerenciando {usersByRole.total} contas e {classes.length} turmas no sistema.</p>
+                    </div>
+                    <button onClick={() => setIsOpen(true)} className="flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-lg shadow-cyan-900/20 active:scale-95">
+                        <Plus className="w-5 h-5" />
+                        <span>Novo Usuário</span>
+                    </button>
+                    {isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div 
+                        className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm" 
+                        onClick={closeModal}
+                    />
 
-                        <form onSubmit={submitStore} className="mt-6 space-y-4">
+                    <section className="relative z-10 w-full max-w-lg rounded-3xl border border-slate-700 bg-slate-900 p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
+                        <button 
+                            onClick={closeModal}
+                            className="absolute right-6 top-6 text-slate-400 hover:text-white"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+
+                        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">
+                            Painel de administração
+                        </p>
+                        <h1 className="mt-3 text-2xl font-black text-white">Registrar Usuários</h1>
+                        <p className="mt-2 text-sm text-slate-300">
+                            Crie contas de professor e aluno a partir daqui.
+                        </p>
+
+                        <form onSubmit={submitStore} className="mt-6 space-y-4">                           
                             <div>
-                                <label className="mb-1.5 block text-sm font-semibold text-slate-200" htmlFor="name">
-                                    Nome
-                                </label>
+                                <label className="mb-1.5 block text-sm font-semibold text-slate-200" htmlFor="name">Nome</label>
                                 <input
                                     id="name"
                                     value={storeForm.data.name}
@@ -361,16 +417,73 @@ export default function AdminDashboard() {
                                 />
                             </div>
 
-                            <button
-                                type="submit"
-                                disabled={storeForm.processing}
-                                className="w-full rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-70"
-                            >
-                                {storeForm.processing ? 'Criando...' : 'Criar usuário'}
-                            </button>
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={closeModal}
+                                    className="flex-1 rounded-xl border border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-800"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={storeForm.processing}
+                                    className="flex-[2] rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-70 shadow-lg shadow-cyan-900/20"
+                                >
+                                    {storeForm.processing ? 'Criando...' : 'Criar usuário'}
+                                </button>
+                            </div>
                         </form>
                     </section>
+                </div>
+            )}
+                </div>
 
+                <div className="grid lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2 p-6 bg-slate-900/50 border border-slate-800 rounded-2xl backdrop-blur-sm">
+                        <h3 className="font-bold text-white mb-6 flex items-center gap-2">
+                            <School className="w-5 h-5 text-cyan-500" />
+                            Desempenho por Turma
+                        </h3>
+                        <div className="h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={chartData}>
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} stroke="#64748b" fontSize={12} />
+                                    <YAxis hide />
+                                    <Tooltip 
+                                        cursor={{fill: '#1e293b', opacity: 0.4}} 
+                                        contentStyle={{backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '12px', color: '#fff'}} 
+                                    />
+                                    <Bar dataKey="media" fill="#0891b2" radius={[6, 6, 0, 0]} barSize={40} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                    
+                    <div className="flex flex-col gap-4">
+                        <div className="p-6 bg-slate-900/50 border-l-4 border-l-cyan-500 border-y border-r border-slate-800 rounded-xl">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-slate-400 text-xs uppercase font-bold tracking-wider">Professores</p>
+                                    <p className="text-4xl font-black text-white mt-1">{usersByRole.teacher}</p>
+                                </div>
+                                <Users className="w-6 h-6 text-cyan-500 opacity-50" />
+                            </div>
+                        </div>
+
+                        <div className="p-6 bg-slate-900/50 border-l-4 border-l-amber-500 border-y border-r border-slate-800 rounded-xl">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-slate-400 text-xs uppercase font-bold tracking-wider">Alunos</p>
+                                    <p className="text-4xl font-black text-white mt-1">{usersByRole.student}</p>
+                                </div>
+                                <GraduationCap className="w-6 h-6 text-amber-500 opacity-50" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
                     <section className="rounded-3xl border border-slate-700 bg-slate-900/85 p-6 shadow-xl">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div>
@@ -548,7 +661,7 @@ export default function AdminDashboard() {
                     </section>
                 </div>
 
-                <section className="mx-auto mt-10 grid w-full max-w-6xl gap-8 lg:grid-cols-[1.1fr_1.9fr]">
+                <section className="mt-10 grid gap-8 lg:grid-cols-[1.1fr_1.9fr]">
                     <div className="rounded-3xl border border-slate-700 bg-slate-900/85 p-6 shadow-xl">
                         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-300">Turmas</p>
                         <h2 className="mt-3 text-2xl font-black">Criar nova turma</h2>
@@ -701,7 +814,7 @@ export default function AdminDashboard() {
                         </div>
                     </div>
                 </section>
-            </main>
-        </>
+            </div>
+        </DashboardShell>
     );
 }
