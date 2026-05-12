@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
-import { Plus, Users, GraduationCap, School } from 'lucide-react';
+import { Plus, Users, GraduationCap, School, Backpack } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { DashboardShell } from '@/components/auth/DashboardShell';
@@ -68,8 +68,10 @@ export default function AdminDashboard() {
     const { users, classes, teachers, filters, roles } = usePage<AdminDashboardProps>().props;
     const [editingUserId, setEditingUserId] = useState<number | null>(null);
     const [isOpen, setIsOpen] = useState(false);
+    const [isOpenUser, setOpenUser] = useState(false);
 
     const closeModal = () => setIsOpen(false);
+    const closeUserModal = () => setOpenUser(false);
 
     const usersByRole = useMemo(() => {
     const teacherCount = users.filter((user) => user.role === 'teacher').length;
@@ -89,7 +91,6 @@ export default function AdminDashboard() {
     });
 
     const chartData = useMemo(() => {
-        // Mantém o render determinístico: gera um valor “pseudo-aleatório” com base no id/nome.
         const hashToRange = (input: string) => {
             let hash = 0;
 
@@ -293,20 +294,20 @@ export default function AdminDashboard() {
                         <h2 className="text-3xl font-extrabold text-white tracking-tight">Painel de Administração</h2>
                         <p className="text-slate-400 mt-1 text-sm">Gerenciando {usersByRole.total} contas e {classes.length} turmas no sistema.</p>
                     </div>
-                    <button onClick={() => setIsOpen(true)} className="flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-lg shadow-cyan-900/20 active:scale-95">
+                    <button onClick={() => setOpenUser(true)} className="flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-lg shadow-cyan-900/20 active:scale-95">
                         <Plus className="w-5 h-5" />
                         <span>Novo Usuário</span>
                     </button>
-                    {isOpen && (
+                    {isOpenUser && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div 
                         className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm" 
-                        onClick={closeModal}
+                        onClick={closeUserModal}
                     />
 
                     <section className="relative z-10 w-full max-w-lg rounded-3xl border border-slate-700 bg-slate-900 p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
                         <button 
-                            onClick={closeModal}
+                            onClick={closeUserModal}
                             className="absolute right-6 top-6 text-slate-400 hover:text-white"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -463,7 +464,6 @@ export default function AdminDashboard() {
                             </ResponsiveContainer>
                         </div>
                     </div>
-                    
                     <div className="flex flex-col gap-4">
                         <div className="p-6 bg-slate-900/50 border-l-4 border-l-cyan-500 border-y border-r border-slate-800 rounded-xl">
                             <div className="flex justify-between items-start">
@@ -491,7 +491,9 @@ export default function AdminDashboard() {
                     <section className="rounded-3xl border border-slate-700 bg-slate-900/85 p-6 shadow-xl">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">Usuários</p>
+                                <div className='flex items-center gap-2'>
+                                    <Users className="w-5 h-5 text-cyan-300" /><p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">Usuários</p>
+                                </div>
                                 <h2 className="mt-2 text-2xl font-black">Gerenciar Usuários</h2>
                             </div>
                             <div className="flex items-center gap-2">
@@ -656,10 +658,11 @@ export default function AdminDashboard() {
 
                 <section className="mt-10">
     <div className="rounded-3xl border border-slate-700 bg-slate-900/85 p-6 shadow-xl">
-        {/* Cabeçalho da Seção */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-6">
             <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-300">Painel</p>
+                <div className='flex items-center gap-2'>
+                    <Backpack className="w-5 h-5 text-amber-500" /><p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-300">Painel</p>
+                </div>
                 <h2 className="mt-2 text-3xl font-black">Gerenciar turmas</h2>
             </div>
             
@@ -668,7 +671,7 @@ export default function AdminDashboard() {
                     Total: {classes.length}
                 </span>
                 <button
-                    onClick={() => setIsOpen(true)} // Abre o Modal
+                    onClick={() => setIsOpen(true)}
                     className="flex items-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-amber-500 hover:shadow-lg hover:shadow-amber-900/20"
                 >
                     <span className="text-lg">+</span> Criar nova turma
