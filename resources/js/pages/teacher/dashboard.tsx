@@ -1,5 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { DashboardShell } from '../../components/auth/DashboardShell';
 
 type TeacherClass = {
@@ -57,6 +57,9 @@ const defaultQuestion: QuizFormQuestion = {
 };
 
 function TeacherDashboard() {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const closeModal = () => setIsOpen(false);
   const { classes, quizzes } = usePage<TeacherDashboardProps>().props;
   const totalStudents = useMemo(
     () => classes.reduce((sum, classItem) => sum + classItem.students_count, 0),
@@ -158,28 +161,6 @@ function TeacherDashboard() {
     <DashboardShell>
       <Head title="Painel do Professor" />
       <div className="space-y-8 p-6 bg-[rgb(2,7,23)] min-h-screen font-sans">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-white">Visao Geral</h2>
-            <p className="text-slate-400 mt-1">Gerencie suas avaliacoes, turmas e convites.</p>
-          </div>
-          <Link
-            href="/teacher/dashboard#quiz-form"
-            className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors shadow-lg shadow-indigo-900/20"
-          >
-            <svg
-              className="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Criar Novo Quiz
-          </Link>
-        </div>
-
         <div className="grid md:grid-cols-3 gap-6">
           <div className="bg-slate-900/50 p-5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm">
             <div className="text-slate-400 text-sm font-medium mb-1">Turmas ativas</div>
@@ -199,7 +180,9 @@ function TeacherDashboard() {
 
         <div className="grid lg:grid-cols-[1.2fr_1.8fr] gap-6">
           <div className="bg-slate-900/50 rounded-xl border border-slate-800 shadow-sm p-5 backdrop-blur-sm">
-            <h3 className="text-lg font-bold text-white mb-4">Suas turmas</h3>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+        </div>
+            <h3 className="text-2xl font-bold text-white mb-4">Suas turmas</h3>
             <div className="space-y-3">
               {classes.map((classItem) => {
                 const invitePath = `/student/classes/join/${classItem.invite_code}`;
@@ -236,7 +219,24 @@ function TeacherDashboard() {
           </div>
 
           <div className="bg-slate-900/50 rounded-xl border border-slate-800 shadow-sm p-5 backdrop-blur-sm">
-            <h3 className="text-lg font-bold text-white mb-4">Quizzes recentes</h3>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
+              <h3 className="text-2xl font-bold text-white mb-4">Quizzes recentes</h3>
+              <button
+                onClick={() => setIsOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors shadow-lg shadow-indigo-900/20"
+              >
+                <svg
+                  className="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Criar Novo Quiz
+              </button>
+        </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="text-xs text-slate-400 uppercase bg-slate-900/80 border-b border-slate-800">
@@ -278,7 +278,9 @@ function TeacherDashboard() {
           </div>
         </div>
 
-        <div id="quiz-form" className="bg-slate-900/50 rounded-xl border border-slate-800 shadow-sm p-6 backdrop-blur-sm">
+        {isOpen && (
+          <div className='fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4'>
+          <div id="quiz-form" className="bg-slate-900/50 rounded-xl border border-slate-800 shadow-sm p-6 backdrop-blur-sm">
           <h3 className="text-lg font-bold text-white mb-4">Criar novo quiz</h3>
           {classes.length === 0 ? (
             <p className="text-sm text-slate-400">
@@ -483,16 +485,23 @@ function TeacherDashboard() {
                 )}
               </div>
 
-              <button
-                type="submit"
-                disabled={quizForm.processing}
-                className="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-70"
-              >
-                {quizForm.processing ? 'Salvando...' : 'Publicar quiz'}
-              </button>
+              <div className='flex gap-20'>
+                <button
+                  type="submit"
+                  disabled={quizForm.processing}
+                  className="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-70"
+                >
+                  {quizForm.processing ? 'Salvando...' : 'Publicar quiz'}
+                </button>
+                <button onClick={closeModal} className="w-full rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-700/50">
+                  Cancelar
+                </button>
+              </div>
             </form>
           )}
         </div>
+        </div>
+          )}
       </div>
     </DashboardShell>
   );
