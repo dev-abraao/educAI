@@ -35,7 +35,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <div className="p-4 border-b border-slate-800 flex items-center gap-3">
           <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-indigo-900/20">
             <img 
-              src="/Icon.png" 
+              src="/icon.png" 
               alt="Logo" 
               className="w-7 h-7 object-contain invert brightness-0" 
               style={{ filter: 'brightness(0) invert(1)' }} 
@@ -91,6 +91,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                />
                <SidebarItem 
                  label="Relatórios" 
+                 icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>} 
+               />
+               <SidebarItem 
+                 label="Gerenciar Turmas" 
                  icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>} 
                />
              </>
