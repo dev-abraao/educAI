@@ -61,6 +61,7 @@ function TeacherDashboard() {
   
   const closeModal = () => setIsOpen(false);
   const { classes, quizzes } = usePage<TeacherDashboardProps>().props;
+  const { auth } = usePage().props as any;
   const totalStudents = useMemo(
     () => classes.reduce((sum, classItem) => sum + classItem.students_count, 0),
     [classes],
@@ -159,8 +160,16 @@ function TeacherDashboard() {
 
   return (
     <DashboardShell>
-      <Head title="Painel do Professor" />
-      <div className="space-y-8 p-6 bg-[rgb(2,7,23)] min-h-screen font-sans">
+      <div className="space-y-8 p-6 bg-[rgb(2,7,23)] min-h-screen font-sans w-[80%] mx-auto">
+        <header className="">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <h1 className="mt-2 text-3xl font-black text-white">Olá, {auth.user.name}!</h1>
+                                <p className="mt-2 text-slate-400">Gerencie suas turmas e realize suas avaliações.</p>
+                            </div>
+                            
+                        </div>
+                    </header>
         <div className="grid md:grid-cols-3 gap-6">
           <div className="bg-slate-900/50 p-5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm">
             <div className="text-slate-400 text-sm font-medium mb-1">Turmas ativas</div>
@@ -177,53 +186,12 @@ function TeacherDashboard() {
             <div className="text-3xl font-bold text-white">{quizzes.length}</div>
           </div>
         </div>
-
-        <div className="grid lg:grid-cols-[1.2fr_1.8fr] gap-6">
-          <div className="bg-slate-900/50 rounded-xl border border-slate-800 shadow-sm p-5 backdrop-blur-sm">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-        </div>
-            <h3 className="text-2xl font-bold text-white mb-4">Suas turmas</h3>
-            <div className="space-y-3">
-              {classes.map((classItem) => {
-                const invitePath = `/student/classes/join/${classItem.invite_code}`;
-
-                return (
-                  <div
-                    key={classItem.id}
-                    className="bg-slate-950/60 rounded-xl border border-slate-800 px-4 py-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-slate-100 font-semibold">{classItem.name}</p>
-                        <p className="text-xs text-slate-400">
-                          {classItem.students_count} aluno(s) •{' '}
-                          {classItem.active ? 'Ativa' : 'Inativa'}
-                        </p>
-                      </div>
-                      <Link
-                        href={invitePath}
-                        className="text-indigo-300 text-sm hover:text-indigo-200"
-                      >
-                        Link de convite
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
-              {classes.length === 0 && (
-                <p className="text-sm text-slate-400">
-                  Nenhuma turma vinculada. Solicite ao admin o cadastro da turma.
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-slate-900/50 rounded-xl border border-slate-800 shadow-sm p-5 backdrop-blur-sm">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
               <h3 className="text-2xl font-bold text-white mb-4">Quizzes recentes</h3>
+<div className="bg-slate-900/50 rounded-3xl border border-slate-800 shadow-sm p-5 backdrop-blur-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
               <button
                 onClick={() => setIsOpen(true)}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors shadow-lg shadow-indigo-900/20"
+                className="bg-blue-600 hover:bg-indigo-500 text-gray-200 px-2 py-1 text-sm rounded-xl font-medium flex items-center transition-colors shadow-lg shadow-indigo-900/20"
               >
                 <svg
                   className="w-4 h-4 mr-2"
@@ -236,7 +204,7 @@ function TeacherDashboard() {
                 </svg>
                 Criar Novo Quiz
               </button>
-        </div>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="text-xs text-slate-400 uppercase bg-slate-900/80 border-b border-slate-800">
@@ -276,6 +244,46 @@ function TeacherDashboard() {
               </table>
             </div>
           </div>
+        <div>
+          <h3 className="text-2xl font-bold text-white mb-4">Suas turmas</h3>
+          <div className="bg-slate-900/50 rounded-xl border border-slate-800 shadow-sm p-5 backdrop-blur-sm">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+        </div>
+            <div className="space-y-3">
+              {classes.map((classItem) => {
+                const invitePath = `/student/classes/join/${classItem.invite_code}`;
+
+                return (
+                  <div
+                    key={classItem.id}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-slate-100 font-semibold">{classItem.name}</p>
+                        <p className="text-xs text-slate-400">
+                          {classItem.students_count} aluno(s) •{' '}
+                          {classItem.active ? 'Ativa' : 'Inativa'}
+                        </p>
+                      </div>
+                      <Link
+                        href={invitePath}
+                        className="text-indigo-300 text-sm hover:text-indigo-200"
+                      >
+                        Link de convite
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+              {classes.length === 0 && (
+                <p className="text-sm text-slate-400">
+                  Nenhuma turma vinculada. Solicite ao admin o cadastro da turma.
+                </p>
+              )}
+            </div>
+          </div>
+
+          
         </div>
 
         {isOpen && (
