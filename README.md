@@ -19,6 +19,31 @@ O principal objetivo do **EducAI** é unir tecnologia e educação em uma única
 - Apoio aos docentes na criação de aulas e questionários;
 - Ambiente moderno, responsivo e intuitivo.
 
+
+---
+
+## Funcionalidades
+
+- Gestão de usuários com três níveis de acesso: administrador, professor e aluno
+- Criação de turmas com código de convite para entrada dos alunos
+- Quizzes com múltiplas questões, alternativas, pontuação por questão e tempo limite
+- Correção automática e exibição de gabarito após o envio
+- Geração de questões por IA a partir de tema e nível de dificuldade
+- Dashboard de desempenho por turma e histórico individual do aluno
+
+---
+
+## Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Backend | Laravel 13 · PHP 8.3 |
+| Frontend | Inertia.js · React 18 · TypeScript |
+| Banco de dados | PostgreSQL 16 |
+| Build | Vite 6 |
+| Testes | Pest PHP |
+| Infra | Docker Compose |
+
 ---
 
 ## Níveis de Acesso
@@ -109,3 +134,26 @@ A IA também poderá sugerir:
 - Apoio tecnológico ao docente;
 - Decisões pedagógicas baseadas em dados;
 - Escalabilidade para instituições de ensino.
+
+---
+
+## Executando com Docker
+
+Pré-requisito: [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado.
+
+```bash
+git clone <url-do-repositorio>
+cd educAI
+cp .env.example .env
+```
+
+Adicione sua chave no `.env`:
+
+```
+OPENAI_API_KEY=sk-proj-...
+```
+---
+
+## Documentação - Discovery e Arquitetura do Problema
+
+**Link Docs.:** (https://docs.google.com/document/d/1H20Oe9UeEx0VR0v9BRDUt1FyUsuOPV7qkIx-pvDsmAo/edit?usp=sharing)

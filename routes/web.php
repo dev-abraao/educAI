@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Student\StudentClassJoinController;
 use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\Student\StudentQuizController;
+use App\Http\Controllers\Teacher\AiQuizController;
 use App\Http\Controllers\Teacher\QuizController as TeacherQuizController;
 use App\Http\Controllers\Teacher\TeacherDashboardController;
 use App\Models\User;
@@ -42,6 +43,7 @@ Route::middleware('auth')->group(function (): void {
 	Route::middleware('role:teacher')->prefix('teacher')->name('teacher.')->group(function (): void {
 		Route::get('/dashboard', TeacherDashboardController::class)->name('dashboard');
 		Route::post('/quizzes', [TeacherQuizController::class, 'store'])->name('quizzes.store');
+		Route::post('/quizzes/generate', [AiQuizController::class, 'generate'])->name('quizzes.generate');
 	});
 
 	Route::middleware('role:student')->prefix('student')->name('student.')->group(function (): void {
