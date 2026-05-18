@@ -67,6 +67,7 @@ type UpdateUserFormData = {
 export default function AdminDashboard() {
     const { users, classes, teachers, filters, roles } = usePage<AdminDashboardProps>().props;
     const [editingUserId, setEditingUserId] = useState<number | null>(null);
+    const [copiedId, setCopiedId] = useState<number | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     const [isOpenUser, setOpenUser] = useState(false);
 
@@ -116,6 +117,8 @@ export default function AdminDashboard() {
                 classForm.reset();
             },
         });
+
+        closeModal();
     };
 
     const toggleClassSelection = (selected: number[], classId: number) => {
@@ -133,6 +136,14 @@ export default function AdminDashboard() {
 
         return selected.includes(classItem.id);
     }
+
+    const copyInviteLink = (classItem: ManagedClass) => {
+        const fullUrl = `${window.location.origin}/student/classes/join/${classItem.invite_code}`;
+        navigator.clipboard.writeText(fullUrl).then(() => {
+            setCopiedId(classItem.id);
+            setTimeout(() => setCopiedId(null), 2000);
+        });
+    };
 
     const deleteUser = (userId: number) => {
         if (!window.confirm('Excluir este usuário?')) {
@@ -227,6 +238,8 @@ export default function AdminDashboard() {
                 storeForm.setData('role', 'teacher');
             },
         });
+
+        closeUserModal();
     };
 
     const renderClassSelection = (
@@ -294,7 +307,7 @@ export default function AdminDashboard() {
                         <h2 className="text-3xl font-extrabold text-white tracking-tight">Painel de Administração</h2>
                         <p className="text-slate-400 mt-1 text-sm">Gerenciando {usersByRole.total} contas e {classes.length} turmas no sistema.</p>
                     </div>
-                    <button onClick={() => setOpenUser(true)} className="flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-lg shadow-cyan-900/20 active:scale-95">
+                    <button onClick={() => setOpenUser(true)} className="flex items-center justify-center cursor-pointer gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-lg shadow-cyan-900/20 active:scale-95">
                         <Plus className="w-5 h-5" />
                         <span>Novo Usuário</span>
                     </button>
@@ -421,15 +434,15 @@ export default function AdminDashboard() {
                             <div className="flex gap-3 pt-2">
                                 <button
                                     type="button"
-                                    onClick={closeModal}
-                                    className="flex-1 rounded-xl border border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-800"
+                                    onClick={closeUserModal}
+                                    className="flex-1 rounded-xl cursor-pointer border border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-800"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={storeForm.processing}
-                                    className="flex-[2] rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-70 shadow-lg shadow-cyan-900/20"
+                                    className="flex-[2] rounded-xl cursor-pointer bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-70 shadow-lg shadow-cyan-900/20"
                                 >
                                     {storeForm.processing ? 'Criando...' : 'Criar usuário'}
                                 </button>
@@ -500,7 +513,7 @@ export default function AdminDashboard() {
                                 <select
                                     value={filters.role ?? ''}
                                     onChange={(event) => onFilterChange(event.target.value)}
-                                    className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                                    className="rounded-lg cursor-pointer border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                                 >
                                     <option value="">Todos os usuários</option>
                                     <option value="teacher">Professor</option>
@@ -534,7 +547,7 @@ export default function AdminDashboard() {
                                                 {user.role === 'teacher' && 'Professor'}
                                                 {user.role === 'student' && 'Aluno'}
                                             </td>
-                                            <td className="py-3 pr-3">{new Date(user.created_at).toLocaleDateString()}</td>
+                                            <td className="py-3 pr-3">{new Date(user.created_at).toLocaleDateString('pt-BR')}</td>
                                             <td className="py-3">
                                                 <div className="flex gap-2">
                                                     <button
@@ -672,7 +685,7 @@ export default function AdminDashboard() {
                 </span>
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="flex items-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-amber-500 hover:shadow-lg hover:shadow-amber-900/20"
+                    className="flex items-center gap-2 cursor-pointer rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-amber-500 hover:shadow-lg hover:shadow-amber-900/20"
                 >
                     <span className="text-lg">+</span> Criar nova turma
                 </button>
@@ -706,12 +719,34 @@ export default function AdminDashboard() {
                                 </span>
                             </td>
                             <td className="py-4 pr-3">
-                                <a href={`/student/classes/join/${classItem.invite_code}`} className="text-amber-300/70 hover:text-amber-200 truncate block max-w-[150px]">
-                                    {classItem.invite_code}
-                                </a>
+<button
+                                                        type="button"
+                                                        onClick={() => copyInviteLink(classItem)}
+                                                        className={`flex items-center cursor-pointer transition-colors ${
+                                                            copiedId === classItem.id
+                                                                ? 'text-emerald-400'
+                                                                : 'text-amber-300 hover:text-amber-200'
+                                                        }`}
+                                                    >
+                                                        {copiedId === classItem.id ? (
+                                                            <>
+                                                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                                Copiado!
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                                </svg>
+                                                                Copiar link
+                                                            </>
+                                                        )}
+                                                    </button>
                             </td>
                             <td className="py-4 pr-3 text-slate-400">
-                                {new Date(classItem.created_at).toLocaleDateString()}
+                                {new Date(classItem.created_at).toLocaleDateString('pt-BR')}
                             </td>
                             <td className="py-4">
                                 <button
@@ -785,15 +820,15 @@ export default function AdminDashboard() {
                 <div className="mt-8 flex gap-3">
                     <button
                         type="button"
-                        onClick={() => setIsOpen(false)}
-                        className="flex-1 rounded-xl bg-slate-800 px-4 py-3 text-sm font-bold text-slate-200 hover:bg-slate-700"
+                        onClick={() => closeModal()}
+                        className="flex-1 rounded-xl cursor-pointer bg-slate-800 px-4 py-3 text-sm font-bold text-slate-200 hover:bg-slate-700"
                     >
                         Cancelar
                     </button>
                     <button
                         type="submit"
                         disabled={classForm.processing}
-                        className="flex-[2] rounded-xl bg-amber-600 px-4 py-3 text-sm font-bold text-white hover:bg-amber-500 disabled:opacity-50"
+                        className="flex-[2] rounded-xl cursor-pointer bg-amber-600 px-4 py-3 text-sm font-bold text-white hover:bg-amber-500 disabled:opacity-50"
                     >
                         {classForm.processing ? 'Salvando...' : 'Confirmar e Criar'}
                     </button>

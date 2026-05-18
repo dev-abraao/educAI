@@ -2,6 +2,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { DashboardShell } from '../../components/auth/DashboardShell';
 
+
 type TeacherClass = {
   id: number;
   name: string;
@@ -57,7 +58,9 @@ const defaultQuestion: QuizFormQuestion = {
 };
 
 function TeacherDashboard() {
+  
   const [isOpen, setIsOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
   
   const closeModal = () => setIsOpen(false);
   const { classes, quizzes } = usePage<TeacherDashboardProps>().props;
@@ -158,8 +161,17 @@ function TeacherDashboard() {
     });
   };
 
+  const copyInviteLink = (classItem: TeacherClass) => {
+    const fullUrl = `${window.location.origin}/student/classes/join/${classItem.invite_code}`;
+    navigator.clipboard.writeText(fullUrl).then(() => {
+      setCopiedId(classItem.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
+
   return (
     <DashboardShell>
+      <Head title="Dashboard" />
       <div className="space-y-8 p-6 bg-[rgb(2,7,23)] min-h-screen font-sans w-[80%] mx-auto">
         <header className="">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -187,11 +199,11 @@ function TeacherDashboard() {
           </div>
         </div>
               <h3 className="text-2xl font-bold text-white mb-4">Quizzes recentes</h3>
-<div className="bg-slate-900/50 rounded-3xl border border-slate-800 shadow-sm p-5 backdrop-blur-sm">
+          <div className="bg-slate-900/50 rounded-3xl border border-slate-800 shadow-sm p-5 backdrop-blur-sm">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
               <button
                 onClick={() => setIsOpen(true)}
-                className="bg-blue-600 hover:bg-indigo-500 text-gray-200 px-2 py-1 text-sm rounded-xl font-medium flex items-center transition-colors shadow-lg shadow-indigo-900/20"
+                className="bg-blue-600 hover:bg-indigo-500 text-gray-200 p-3 text-sm cursor-pointer rounded-xl font-medium flex items-center transition-colors shadow-lg shadow-indigo-900/20"
               >
                 <svg
                   className="w-4 h-4 mr-2"
@@ -226,10 +238,10 @@ function TeacherDashboard() {
                         {quiz.class ? quiz.class.name : 'Turma removida'}
                       </td>
                       <td className="px-4 py-3 text-slate-400">
-                        {new Date(quiz.opens_at).toLocaleString()}
+                        {new Date(quiz.opens_at).toLocaleString('pt-BR')}
                       </td>
                       <td className="px-4 py-3 text-slate-400">
-                        {new Date(quiz.closes_at).toLocaleString()}
+                        {new Date(quiz.closes_at).toLocaleString('pt-BR')}
                       </td>
                     </tr>
                   ))}
@@ -265,12 +277,29 @@ function TeacherDashboard() {
                           {classItem.active ? 'Ativa' : 'Inativa'}
                         </p>
                       </div>
-                      <Link
-                        href={invitePath}
-                        className="text-indigo-300 text-sm hover:text-indigo-200"
+                      <button
+                        type="button"
+                        onClick={() => copyInviteLink(classItem)}
+                        className={`text-sm cursor-pointer flex items-center transition-colors ${
+                          copiedId === classItem.id ? 'text-emerald-400' : 'text-indigo-300 hover:text-indigo-200'
+                        }`}
                       >
-                        Link de convite
-                      </Link>
+                        {copiedId === classItem.id ? (
+                          <>
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Copiado!
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            Copiar link
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
                 );
@@ -285,6 +314,8 @@ function TeacherDashboard() {
 
           
         </div>
+
+        
 
         {isOpen && (
           <div className='fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4'>
@@ -494,15 +525,15 @@ function TeacherDashboard() {
               </div>
 
               <div className='flex gap-20'>
+                <button onClick={closeModal} className="w-full cursor-pointer rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-700/50">
+                  Cancelar
+                </button>
                 <button
                   type="submit"
                   disabled={quizForm.processing}
-                  className="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-70"
+                  className="w-full cursor-pointer rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-70"
                 >
                   {quizForm.processing ? 'Salvando...' : 'Publicar quiz'}
-                </button>
-                <button onClick={closeModal} className="w-full rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-700/50">
-                  Cancelar
                 </button>
               </div>
             </form>

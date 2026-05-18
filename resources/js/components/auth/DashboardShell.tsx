@@ -108,7 +108,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               href="/logout"
               method="post"
               as="button"
-              className="w-full flex items-center py-2.5 text-sm font-medium transition-colors text-left"
+              className="w-full flex cursor-pointer items-center py-2.5 text-sm font-medium transition-colors text-left"
             >
               Sair
             </Link>
