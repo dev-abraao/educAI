@@ -1,4 +1,4 @@
-import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
+import { Head, router, usePage, useForm } from '@inertiajs/react';
 import { Plus, Users, GraduationCap, School, Backpack } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';

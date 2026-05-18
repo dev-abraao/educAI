@@ -1,4 +1,4 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { DashboardShell } from '../../components/auth/DashboardShell';
 
@@ -263,8 +263,6 @@ function TeacherDashboard() {
         </div>
             <div className="space-y-3">
               {classes.map((classItem) => {
-                const invitePath = `/student/classes/join/${classItem.invite_code}`;
-
                 return (
                   <div
                     key={classItem.id}
