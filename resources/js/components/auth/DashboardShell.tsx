@@ -25,6 +25,12 @@ function SidebarItem({ icon, label, active, href }: {
   );
 }
 
+const roleLabels: { [key: string]: string } = {
+  student: "Aluno",
+  teacher: "Professor",
+  admin: "Administrador"
+};
+
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const url = usePage().url;
   const { flash, auth } = usePage().props as any;
@@ -36,7 +42,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <div className="p-4 border-b border-slate-800 flex items-center gap-3">
           <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-indigo-900/20">
             <img
-              src="/icon.png"
+              src="/Icon.png"
               alt="Logo"
               className="w-7 h-7 object-contain invert brightness-0"
               style={{ filter: 'brightness(0) invert(1)' }}
@@ -44,7 +50,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
           <div>
             <div className="font-bold text-white leading-tight">QuizFlow</div>
-            <div className="text-xs text-indigo-400 font-medium">{role}</div>
+            <div className="text-xs text-indigo-400 font-medium">{roleLabels[role]}</div>
           </div>
         </div>
 
@@ -62,7 +68,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {role === 'admin' && (
              <>
                <SidebarItem
-                 label="Gerenciar Usuários"
+                 label="Gerenciar"
                  active
                  href="/admin/dashboard"
                  icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>}

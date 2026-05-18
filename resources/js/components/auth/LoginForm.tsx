@@ -33,7 +33,7 @@ export default function LoginForm() {
                     value={data.email}
                     onChange={(event) => setData('email', event.target.value)}
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 outline-none ring-cyan-500 transition focus:ring-2"
-                    placeholder="teacher@school.edu"
+                    placeholder="professor@escola.edu"
                     required
                 />
                 {errors.email && <p className="mt-1 text-sm font-medium text-rose-600">{errors.email}</p>}
@@ -50,7 +50,7 @@ export default function LoginForm() {
                     value={data.password}
                     onChange={(event) => setData('password', event.target.value)}
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 outline-none ring-cyan-500 transition focus:ring-2"
-                    placeholder="Your password"
+                    placeholder="Sua Senha"
                     minLength={8}
                     required
                 />
