@@ -55,6 +55,7 @@ type AdminDashboardProps = {
     counts: {
         students: number;
         teachers: number;
+        quizzes: number;
     };
 };
 
@@ -309,7 +310,7 @@ export default function AdminDashboard() {
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                     <div>
                         <h2 className="text-3xl font-extrabold text-white tracking-tight">Painel de Administração</h2>
-                        <p className="text-slate-400 mt-1 text-sm">Gerenciando {usersByRole.total} contas e {classes.length} turmas no sistema.</p>
+                        <p className="text-slate-400 mt-1 text-sm">Gerencie usuários, turmas e quizzes.</p>
                     </div>
                     <button onClick={() => setOpenUser(true)} className="flex items-center justify-center cursor-pointer gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-lg shadow-cyan-900/20 active:scale-95">
                         <Plus className="w-5 h-5" />
@@ -501,6 +502,16 @@ export default function AdminDashboard() {
                                 <GraduationCap className="w-6 h-6 text-amber-500 opacity-50" />
                             </div>
                         </div>
+
+                        <div className="p-6 bg-slate-900/50 border-l-4 border-l-green-500 border-y border-r border-slate-800 rounded-xl">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-slate-400 text-xs uppercase font-bold tracking-wider">Quizzes Aplicados(Mês)</p>
+                                    <p className="text-4xl font-black text-white mt-1">{counts.quizzes}</p>
+                                </div>
+                                <GraduationCap className="w-6 h-6 text-amber-500 opacity-50" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -527,6 +538,7 @@ export default function AdminDashboard() {
                         </div>
 
                         <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-300">
+                            <span className="rounded-lg bg-slate-800 px-3 py-1">Total: {usersByRole.teacher + usersByRole.student}</span>
                             <span className="rounded-lg bg-slate-800 px-3 py-1">Professores: {usersByRole.teacher}</span>
                             <span className="rounded-lg bg-slate-800 px-3 py-1">Alunos: {usersByRole.student}</span>
                         </div>

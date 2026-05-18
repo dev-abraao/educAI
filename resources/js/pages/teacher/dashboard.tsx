@@ -1,4 +1,4 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { DashboardShell } from '../../components/auth/DashboardShell';
 
@@ -172,6 +172,16 @@ function TeacherDashboard() {
     });
   };
 
+  const deleteQuiz = (quizId: number) => {
+    if (!window.confirm('Deseja deletar este quiz?')) {
+      return;
+    }
+
+    router.delete(`/teacher/quizzes/${quizId}`, {
+      preserveScroll: true,
+    });
+  };
+
   return (
     <DashboardShell>
       <Head title="Dashboard" />
@@ -228,6 +238,7 @@ function TeacherDashboard() {
                     <th className="px-4 py-3">Turma</th>
                     <th className="px-4 py-3">Abertura</th>
                     <th className="px-4 py-3">Fechamento</th>
+                    <th className="px-4 py-3 text-right">Acoes</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -246,11 +257,20 @@ function TeacherDashboard() {
                       <td className="px-4 py-3 text-slate-400">
                         {new Date(quiz.closes_at).toLocaleString('pt-BR')}
                       </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => deleteQuiz(quiz.id)}
+                          className="text-xs font-semibold text-rose-300 hover:text-rose-200"
+                        >
+                          Excluir
+                        </button>
+                      </td>
                     </tr>
                   ))}
                   {quizzes.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-4 py-6 text-center text-slate-400">
+                      <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
                         Nenhum quiz criado ainda.
                       </td>
                     </tr>
@@ -259,64 +279,6 @@ function TeacherDashboard() {
               </table>
             </div>
           </div>
-        <div>
-          <h3 className="text-2xl font-bold text-white mb-4">Suas turmas</h3>
-          <div className="bg-slate-900/50 rounded-xl border border-slate-800 shadow-sm p-5 backdrop-blur-sm">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-        </div>
-            <div className="space-y-3">
-              {classes.map((classItem) => {
-                return (
-                  <div
-                    key={classItem.id}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-slate-100 font-semibold">{classItem.name}</p>
-                        <p className="text-xs text-slate-400">
-                          {classItem.students_count} aluno(s) •{' '}
-                          {classItem.active ? 'Ativa' : 'Inativa'}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => copyInviteLink(classItem)}
-                        className={`text-sm cursor-pointer flex items-center transition-colors ${
-                          copiedId === classItem.id ? 'text-emerald-400' : 'text-indigo-300 hover:text-indigo-200'
-                        }`}
-                      >
-                        {copiedId === classItem.id ? (
-                          <>
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                            Copiado!
-                          </>
-                        ) : (
-                          <>
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                            Copiar link
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-              {classes.length === 0 && (
-                <p className="text-sm text-slate-400">
-                  Nenhuma turma vinculada. Solicite ao admin o cadastro da turma.
-                </p>
-              )}
-            </div>
-          </div>
-
-
-        </div>
-
-
 
         {isOpen && (
           <div className='fixed inset-0 z-50 flex items-start justify-center bg-slate-950/80 backdrop-blur-sm p-4 sm:items-center'>

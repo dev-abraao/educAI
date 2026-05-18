@@ -45,4 +45,11 @@ class QuizController extends Controller
 
         return back()->with('status', 'Quiz criado com sucesso.');
     }
+
+    public function destroy(Quiz $quiz): RedirectResponse
+    {
+        $quiz->delete();
+
+        return back()->with('status', 'Quiz excluído com sucesso.');
+    }
 }

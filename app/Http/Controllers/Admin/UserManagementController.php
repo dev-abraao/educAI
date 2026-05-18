@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreManagedUserRequest;
 use App\Http\Requests\Admin\UpdateManagedUserRequest;
+use App\Models\Quiz;
 use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +27,9 @@ class UserManagementController extends Controller
             ->where('role', [UserRole::TEACHER->value])
             ->count();
 
+        $monthlyQuizCount = Quiz::query()
+            ->where('created_at', '>=', now()->subMonth())
+            ->count();
 
         $roleFilter = $request->string('role')->toString();
 
@@ -91,6 +95,7 @@ class UserManagementController extends Controller
             'counts' => [
                 'students' => $studentsCount,
                 'teachers' => $teachersCount,
+                'quizzes' => $monthlyQuizCount,
             ],
         ]);
     }

@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Student\StudentClassJoinController;
 use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\Student\StudentQuizController;
+use App\Http\Controllers\Teacher\ClassesController as TeacherClassesController;
 use App\Http\Controllers\Teacher\QuizController as TeacherQuizController;
 use App\Http\Controllers\Teacher\TeacherDashboardController;
 use App\Models\User;
@@ -41,6 +42,11 @@ Route::middleware('auth')->group(function (): void {
 
 	Route::middleware('role:teacher')->prefix('teacher')->name('teacher.')->group(function (): void {
 		Route::get('/dashboard', TeacherDashboardController::class)->name('dashboard');
+		Route::get('/classes', [TeacherClassesController::class, 'index'])->name('classes.index');
+		Route::delete('/classes/{class}/students', [TeacherClassesController::class, 'removeStudent'])
+			->name('classes.students.remove');
+		Route::delete('/quizzes/{quiz}', [TeacherQuizController::class, 'destroy'])
+			->name('quizzes.destroy');
 		Route::post('/quizzes', [TeacherQuizController::class, 'store'])->name('quizzes.store');
 	});
 
