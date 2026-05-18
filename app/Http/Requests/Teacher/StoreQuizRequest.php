@@ -29,6 +29,7 @@ class StoreQuizRequest extends FormRequest
             'opens_at' => ['required', 'date'],
             'closes_at' => ['required', 'date', 'after:opens_at'],
             'duration_minutes' => ['required', 'integer', 'min:1'],
+            'shuffle' => ['sometimes', 'boolean'],
             'questions' => ['required', 'array', 'min:1'],
             'questions.*.text' => ['required', 'string'],
             'questions.*.points' => ['nullable', 'integer', 'min:1'],

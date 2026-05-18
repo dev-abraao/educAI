@@ -20,6 +20,7 @@ return new class extends Migration
             $table->dateTime('opens_at');
             $table->dateTime('closes_at');
             $table->unsignedInteger('duration_minutes');
+            $table->boolean('shuffle')->default(false);
             $table->timestamps();
         });
     }

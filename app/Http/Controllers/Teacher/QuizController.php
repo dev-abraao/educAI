@@ -23,12 +23,13 @@ class QuizController extends Controller
                 'opens_at' => $data['opens_at'],
                 'closes_at' => $data['closes_at'],
                 'duration_minutes' => $data['duration_minutes'],
+                'shuffle' => $data['shuffle'] ?? false,
             ]);
 
             foreach ($data['questions'] as $index => $questionData) {
                 $question = $quiz->questions()->create([
                     'question_text' => $questionData['text'],
-                    'position' => $index + 1,
+                    'position' => $quiz->shuffle ? null : $index + 1,
                     'points' => $questionData['points'] ?? 1,
                 ]);
 
@@ -36,7 +37,7 @@ class QuizController extends Controller
                     $question->options()->create([
                         'option_text' => $optionData['text'],
                         'is_correct' => (bool) ($optionData['is_correct'] ?? false),
-                        'position' => $optionIndex + 1,
+                        'position' => $quiz->shuffle ? null : $optionIndex + 1,
                     ]);
                 }
             }

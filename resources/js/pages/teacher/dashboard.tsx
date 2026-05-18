@@ -34,7 +34,7 @@ type QuizFormOption = {
 
 type QuizFormQuestion = {
   text: string;
-  points: number;
+  points: number | '';
   options: QuizFormOption[];
 };
 
@@ -44,7 +44,8 @@ type QuizFormData = {
   description: string;
   opens_at: string;
   closes_at: string;
-  duration_minutes: number;
+  duration_minutes: number | '';
+  shuffle: boolean;
   questions: QuizFormQuestion[];
 };
 
@@ -58,10 +59,10 @@ const defaultQuestion: QuizFormQuestion = {
 };
 
 function TeacherDashboard() {
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
-  
+
   const closeModal = () => setIsOpen(false);
   const { classes, quizzes } = usePage<TeacherDashboardProps>().props;
   const { auth } = usePage().props as any;
@@ -77,6 +78,7 @@ function TeacherDashboard() {
     opens_at: '',
     closes_at: '',
     duration_minutes: 10,
+    shuffle: false,
     questions: [{ ...defaultQuestion }],
   });
 
@@ -159,6 +161,7 @@ function TeacherDashboard() {
         quizForm.setData('questions', [{ ...defaultQuestion }]);
       },
     });
+    closeModal();
   };
 
   const copyInviteLink = (classItem: TeacherClass) => {
@@ -179,7 +182,7 @@ function TeacherDashboard() {
                                 <h1 className="mt-2 text-3xl font-black text-white">Olá, {auth.user.name}!</h1>
                                 <p className="mt-2 text-slate-400">Gerencie suas turmas e realize suas avaliações.</p>
                             </div>
-                            
+
                         </div>
                     </header>
         <div className="grid md:grid-cols-3 gap-6">
@@ -310,229 +313,247 @@ function TeacherDashboard() {
             </div>
           </div>
 
-          
+
         </div>
 
-        
+
 
         {isOpen && (
-          <div className='fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4'>
-          <div id="quiz-form" className="bg-slate-900/50 rounded-xl border border-slate-800 shadow-sm p-6 backdrop-blur-sm">
-          <h3 className="text-lg font-bold text-white mb-4">Criar novo quiz</h3>
-          {classes.length === 0 ? (
-            <p className="text-sm text-slate-400">
-              Voce precisa de uma turma para criar um quiz.
-            </p>
-          ) : (
-            <form onSubmit={submitQuiz} className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-200">Turma</label>
-                  <select
-                    value={quizForm.data.class_id}
-                    onChange={(event) =>
-                      quizForm.setData('class_id', Number(event.target.value))
-                    }
-                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-slate-100"
-                    required
-                  >
-                    {classes.map((classItem) => (
-                      <option key={classItem.id} value={classItem.id}>
-                        {classItem.name}
-                      </option>
-                    ))}
-                  </select>
-                  {quizForm.errors.class_id && (
-                    <p className="mt-1 text-sm text-rose-400">{quizForm.errors.class_id}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-200">Duracao (minutos)</label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={quizForm.data.duration_minutes}
-                    onChange={(event) =>
-                      quizForm.setData('duration_minutes', Number(event.target.value))
-                    }
-                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-slate-100"
-                    required
-                  />
-                  {quizForm.errors.duration_minutes && (
-                    <p className="mt-1 text-sm text-rose-400">
-                      {quizForm.errors.duration_minutes}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-200">Titulo</label>
-                  <input
-                    value={quizForm.data.title}
-                    onChange={(event) => quizForm.setData('title', event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-slate-100"
-                    required
-                  />
-                  {quizForm.errors.title && (
-                    <p className="mt-1 text-sm text-rose-400">{quizForm.errors.title}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-200">Descricao</label>
-                  <input
-                    value={quizForm.data.description}
-                    onChange={(event) => quizForm.setData('description', event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-slate-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-200">Abertura</label>
-                  <input
-                    type="datetime-local"
-                    value={quizForm.data.opens_at}
-                    onChange={(event) => quizForm.setData('opens_at', event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-slate-100"
-                    required
-                  />
-                  {quizForm.errors.opens_at && (
-                    <p className="mt-1 text-sm text-rose-400">{quizForm.errors.opens_at}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-200">Fechamento</label>
-                  <input
-                    type="datetime-local"
-                    value={quizForm.data.closes_at}
-                    onChange={(event) => quizForm.setData('closes_at', event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-slate-100"
-                    required
-                  />
-                  {quizForm.errors.closes_at && (
-                    <p className="mt-1 text-sm text-rose-400">{quizForm.errors.closes_at}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-base font-semibold text-white">Questoes</h4>
-                  <button
-                    type="button"
-                    onClick={addQuestion}
-                    className="rounded-lg border border-indigo-500/40 px-3 py-1 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/10"
-                  >
-                    Adicionar questao
-                  </button>
-                </div>
-
-                {quizForm.data.questions.map((question, questionIndex) => (
-                  <div
-                    key={questionIndex}
-                    className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4"
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-slate-200">
-                        Questao {questionIndex + 1}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => removeQuestion(questionIndex)}
-                        className="text-xs text-rose-300 hover:text-rose-200"
-                      >
-                        Remover
-                      </button>
-                    </div>
-
-                    <div className="mt-3 grid gap-3 md:grid-cols-[2fr_1fr]">
-                      <input
-                        value={question.text}
-                        onChange={(event) =>
-                          updateQuestion(questionIndex, { text: event.target.value })
-                        }
-                        placeholder="Enunciado da questao"
-                        className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100"
-                        required
-                      />
-                      <input
-                        type="number"
-                        min={1}
-                        value={question.points}
-                        onChange={(event) =>
-                          updateQuestion(questionIndex, {
-                            points: Number(event.target.value),
-                          })
-                        }
-                        className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100"
-                        required
-                      />
-                    </div>
-
-                    <div className="mt-4 space-y-2">
-                      {question.options.map((option, optionIndex) => (
-                        <div
-                          key={optionIndex}
-                          className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-800 px-3 py-2"
-                        >
-                          <button
-                            type="button"
-                            onClick={() => setCorrectOption(questionIndex, optionIndex)}
-                            className={`h-3 w-3 rounded-full border ${
-                              option.is_correct
-                                ? 'border-emerald-400 bg-emerald-400'
-                                : 'border-slate-500'
-                            }`}
-                            aria-label="Marcar alternativa correta"
-                          />
-                          <input
-                            value={option.text}
-                            onChange={(event) =>
-                              updateOption(questionIndex, optionIndex, {
-                                text: event.target.value,
-                              })
-                            }
-                            placeholder={`Alternativa ${optionIndex + 1}`}
-                            className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeOption(questionIndex, optionIndex)}
-                            className="text-xs text-slate-400 hover:text-slate-200"
-                          >
-                            Remover
-                          </button>
-                        </div>
+          <div className='fixed inset-0 z-50 flex items-start justify-center bg-slate-950/80 backdrop-blur-sm p-4 sm:items-center'>
+            <div id="quiz-form" className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-slate-900/50 rounded-xl border border-slate-800 shadow-sm p-6 backdrop-blur-sm">
+            <h3 className="text-lg font-bold text-white mb-4">Criar novo quiz</h3>
+            {classes.length === 0 ? (
+              <p className="text-sm text-slate-400">
+                Voce precisa de uma turma para criar um quiz.
+              </p>
+            ) : (
+              <form onSubmit={submitQuiz} className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-200">Turma</label>
+                    <select
+                      value={quizForm.data.class_id}
+                      onChange={(event) =>
+                        quizForm.setData('class_id', Number(event.target.value))
+                      }
+                      className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-slate-100"
+                      required
+                    >
+                      {classes.map((classItem) => (
+                        <option key={classItem.id} value={classItem.id}>
+                          {classItem.name}
+                        </option>
                       ))}
-                      <button
-                        type="button"
-                        onClick={() => addOption(questionIndex)}
-                        className="text-xs text-indigo-300 hover:text-indigo-200"
-                      >
-                        Adicionar alternativa
-                      </button>
-                    </div>
+                    </select>
+                    {quizForm.errors.class_id && (
+                      <p className="mt-1 text-sm text-rose-400">{quizForm.errors.class_id}</p>
+                    )}
                   </div>
-                ))}
-                {quizForm.errors.questions && (
-                  <p className="text-sm text-rose-400">{quizForm.errors.questions}</p>
-                )}
-              </div>
 
-              <div className='flex gap-20'>
-                <button onClick={closeModal} className="w-full cursor-pointer rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-700/50">
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={quizForm.processing}
-                  className="w-full cursor-pointer rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-70"
-                >
-                  {quizForm.processing ? 'Salvando...' : 'Publicar quiz'}
-                </button>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-200">Duracao (minutos)</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={quizForm.data.duration_minutes}
+                      onChange={(event) => {
+                        const nextValue = event.target.value;
+                        quizForm.setData(
+                          'duration_minutes',
+                          nextValue === '' ? '' : Number(nextValue),
+                        );
+                      }}
+                      className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-slate-100"
+                      required
+                    />
+                    {quizForm.errors.duration_minutes && (
+                      <p className="mt-1 text-sm text-rose-400">
+                        {quizForm.errors.duration_minutes}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-200">Titulo</label>
+                    <input
+                      value={quizForm.data.title}
+                      onChange={(event) => quizForm.setData('title', event.target.value)}
+                      className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-slate-100"
+                      required
+                    />
+                    {quizForm.errors.title && (
+                      <p className="mt-1 text-sm text-rose-400">{quizForm.errors.title}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-200">Descricao</label>
+                    <input
+                      value={quizForm.data.description}
+                      onChange={(event) => quizForm.setData('description', event.target.value)}
+                      className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-slate-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-200">Abertura</label>
+                    <input
+                      type="datetime-local"
+                      value={quizForm.data.opens_at}
+                      onChange={(event) => quizForm.setData('opens_at', event.target.value)}
+                      className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-slate-100"
+                      required
+                    />
+                    {quizForm.errors.opens_at && (
+                      <p className="mt-1 text-sm text-rose-400">{quizForm.errors.opens_at}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-200">Fechamento</label>
+                    <input
+                      type="datetime-local"
+                      value={quizForm.data.closes_at}
+                      onChange={(event) => quizForm.setData('closes_at', event.target.value)}
+                      className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-slate-100"
+                      required
+                    />
+                    {quizForm.errors.closes_at && (
+                      <p className="mt-1 text-sm text-rose-400">{quizForm.errors.closes_at}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <input
+                    id="shuffle-quiz"
+                    type="checkbox"
+                    checked={quizForm.data.shuffle}
+                    onChange={(event) => quizForm.setData('shuffle', event.target.checked)}
+                    className="h-4 w-4 rounded border-slate-700 bg-slate-950 text-indigo-500"
+                  />
+                  <label htmlFor="shuffle-quiz" className="text-sm font-semibold text-slate-200">
+                    Embaralhar Questôes e alternativas
+                  </label>
+                </div>
+
+                <div className="space-y-4  overflow-y-auto max-h-[31vh]">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-base font-semibold text-white">Questoes</h4>
+                    <button
+                      type="button"
+                      onClick={addQuestion}
+                      className="rounded-lg border border-indigo-500/40 px-3 py-1 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/10"
+                    >
+                      Adicionar questao
+                    </button>
+                  </div>
+
+                  {quizForm.data.questions.map((question, questionIndex) => (
+                    <div
+                      key={questionIndex}
+                      className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4"
+                    >
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-slate-200">
+                          Questao {questionIndex + 1}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => removeQuestion(questionIndex)}
+                          className="text-xs text-rose-300 hover:text-rose-200"
+                        >
+                          Remover
+                        </button>
+                      </div>
+
+                      <div className="mt-3 grid gap-3 md:grid-cols-[2fr_1fr]">
+                        <input
+                          value={question.text}
+                          onChange={(event) =>
+                            updateQuestion(questionIndex, { text: event.target.value })
+                          }
+                          placeholder="Enunciado da questao"
+                          className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100"
+                          required
+                        />
+                        <input
+                          type="number"
+                          min={1}
+                          value={question.points}
+                          onChange={(event) => {
+                            const nextValue = event.target.value;
+                            updateQuestion(questionIndex, {
+                              points: nextValue === '' ? '' : Number(nextValue),
+                            });
+                          }}
+                          className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100"
+                          required
+                        />
+                      </div>
+
+                      <div className="mt-4 space-y-2">
+                        {question.options.map((option, optionIndex) => (
+                          <div
+                            key={optionIndex}
+                            className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-800 px-3 py-2"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => setCorrectOption(questionIndex, optionIndex)}
+                              className={`h-3 w-3 rounded-full border ${
+                                option.is_correct
+                                  ? 'border-emerald-400 bg-emerald-400'
+                                  : 'border-slate-500'
+                              }`}
+                              aria-label="Marcar alternativa correta"
+                            />
+                            <input
+                              value={option.text}
+                              onChange={(event) =>
+                                updateOption(questionIndex, optionIndex, {
+                                  text: event.target.value,
+                                })
+                              }
+                              placeholder={`Alternativa ${optionIndex + 1}`}
+                              className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
+                              required
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeOption(questionIndex, optionIndex)}
+                              className="text-xs text-slate-400 hover:text-slate-200"
+                            >
+                              Remover
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => addOption(questionIndex)}
+                          className="text-xs text-indigo-300 hover:text-indigo-200"
+                        >
+                          Adicionar alternativa
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {quizForm.errors.questions && (
+                    <p className="text-sm text-rose-400">{quizForm.errors.questions}</p>
+                  )}
+                </div>
+
+                <div className='flex gap-20'>
+                  <button onClick={closeModal} className="w-full cursor-pointer rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-700/50">
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={quizForm.processing}
+                    className="w-full cursor-pointer rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-70"
+                  >
+                    {quizForm.processing ? 'Salvando...' : 'Publicar quiz'}
+                  </button>
               </div>
             </form>
           )}

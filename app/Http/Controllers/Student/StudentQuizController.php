@@ -22,8 +22,8 @@ class StudentQuizController extends Controller
         $this->ensureStudentAccess($student, $quiz);
 
         $quiz->load([
-            'questions' => fn ($q) => $q->orderBy('position'),
-            'questions.options' => fn ($q) => $q->orderBy('position'),
+            'questions' => fn ($q) => $q->inRandomOrder(),
+            'questions.options' => fn ($q) => $q->inRandomOrder(),
         ]);
 
         $attempt = QuizAttempt::query()

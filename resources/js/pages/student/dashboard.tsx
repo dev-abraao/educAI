@@ -47,9 +47,8 @@ export default function StudentDashboard({ classes }: StudentDashboardProps) {
                     <header className="">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-blue-400">Portal do Aluno</p>
                                 <h1 className="mt-2 text-3xl font-black text-white">Olá, {auth.user.name}!</h1>
-                                <p className="mt-2 text-slate-400">Gerencie suas turmas e realize suas avaliações.</p>
+                                <p className="mt-2 text-slate-400">Visualize suas turmas e avaliações.</p>
                             </div>
 
                         </div>
@@ -59,7 +58,7 @@ export default function StudentDashboard({ classes }: StudentDashboardProps) {
                         {classes.map((classItem) => (
                             <section key={classItem.id} className="space-y-6">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-bold text-white tracking-wide">Turma: {classItem.name}</h2>
+                                    <h2 className="text-xl font-bold text-white tracking-wide">Turma {classItem.name}</h2>
                                     <span className="text-[10px] font-bold text-blue-400 border border-blue-900/50 bg-blue-950/30 px-3 py-1 rounded-full uppercase">
                                         {classItem.quizzes.length} Atividades
                                     </span>
@@ -80,7 +79,11 @@ export default function StudentDashboard({ classes }: StudentDashboardProps) {
                                             >
                                                 <div className="flex justify-between items-start mb-5">
                                                     {submitted ? (
-                                                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Concluído</span>
+                                                        <div className="space-x-2">
+                                                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Concluído</span>
+                                                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase ${attempt?.score === attempt?.max_score ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'} border`}>Resultado {attempt?.score} / {attempt?.max_score}</span>
+                                                        </div>
+
                                                     ) : isOpen ? (
                                                         <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse">Disponível</span>
                                                     ) : now < opensAt ? (
@@ -97,17 +100,13 @@ export default function StudentDashboard({ classes }: StudentDashboardProps) {
                                                 <h3 className="text-lg font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">{quiz.title}</h3>
 
                                                 <div className="text-[11px] text-slate-500 space-y-1 mb-8">
-                                                    <p className="flex justify-between font-mono"><span>Início:</span> <span className="text-slate-300">{opensAt.toLocaleDateString()} às {opensAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></p>
-                                                    <p className="flex justify-between font-mono"><span>Limite:</span> <span className="text-slate-300">{closesAt.toLocaleDateString()} às {closesAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></p>
+                                                    <p className="flex justify-between font-mono"><span>Início:</span> <span className="text-slate-300">{opensAt.toLocaleDateString('pt-BR')} às {opensAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></p>
+                                                    <p className="flex justify-between font-mono"><span>Limite:</span> <span className="text-slate-300">{closesAt.toLocaleDateString('pt-BR')} às {closesAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></p>
                                                 </div>
 
                                                 <div className="mt-auto">
                                                     {submitted && attempt ? (
                                                         <div className="space-y-3">
-                                                            <div className="bg-emerald-950/20 text-emerald-400 p-4 rounded-xl flex items-center justify-between border border-emerald-500/10">
-                                                                <span className="text-xs font-bold uppercase tracking-wider opacity-70">Resultado</span>
-                                                                <span className="font-black text-xl">{attempt.score}<span className="text-xs opacity-50 ml-1">/ {attempt.max_score}</span></span>
-                                                            </div>
                                                             <Link
                                                                 href={`/student/quizzes/${quiz.id}`}
                                                                 className="w-full flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition-all uppercase tracking-widest"

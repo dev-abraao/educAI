@@ -52,6 +52,10 @@ type AdminDashboardProps = {
         role: string;
     };
     roles: ManagedRole[];
+    counts: {
+        students: number;
+        teachers: number;
+    };
 };
 
 type UpdateUserFormData = {
@@ -65,7 +69,7 @@ type UpdateUserFormData = {
 
 
 export default function AdminDashboard() {
-    const { users, classes, teachers, filters, roles } = usePage<AdminDashboardProps>().props;
+    const { users, classes, teachers, filters, roles, counts } = usePage<AdminDashboardProps>().props;
     const [editingUserId, setEditingUserId] = useState<number | null>(null);
     const [copiedId, setCopiedId] = useState<number | null>(null);
     const [isOpen, setIsOpen] = useState(false);
@@ -207,7 +211,7 @@ export default function AdminDashboard() {
         password_confirmation: '',
         class_ids: [],
     });
-    
+
     const cancelEditing = () => {
         setEditingUserId(null);
         updateForm.reset();
@@ -301,7 +305,7 @@ export default function AdminDashboard() {
         <DashboardShell>
             <div className="space-y-8 p-8 bg-slate-950 min-h-screen text-slate-200">
                 <Head title="Admin | QuizFlow" />
-                
+
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                     <div>
                         <h2 className="text-3xl font-extrabold text-white tracking-tight">Painel de Administração</h2>
@@ -313,13 +317,13 @@ export default function AdminDashboard() {
                     </button>
                     {isOpenUser && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div 
-                        className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm" 
+                    <div
+                        className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm"
                         onClick={closeUserModal}
                     />
 
                     <section className="relative z-10 w-full max-w-lg rounded-3xl border border-slate-700 bg-slate-900 p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
-                        <button 
+                        <button
                             onClick={closeUserModal}
                             className="absolute right-6 top-6 text-slate-400 hover:text-white"
                         >
@@ -336,7 +340,7 @@ export default function AdminDashboard() {
                             Crie contas de professor e aluno a partir daqui.
                         </p>
 
-                        <form onSubmit={submitStore} className="mt-6 space-y-4">                           
+                        <form onSubmit={submitStore} className="mt-6 space-y-4">
                             <div>
                                 <label className="mb-1.5 block text-sm font-semibold text-slate-200" htmlFor="name">Nome</label>
                                 <input
@@ -461,16 +465,16 @@ export default function AdminDashboard() {
                                     <School className="w-5 h-5 text-cyan-500" /><p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">Relatório</p>
                                 </div>
                                 <h2 className="mt-2 text-2xl font-black">Desempenho por Turma</h2>
-                            </div>  
+                            </div>
                         </h3>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={chartData}>
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} stroke="#64748b" fontSize={12} />
                                     <YAxis hide />
-                                    <Tooltip 
-                                        cursor={{fill: '#1e293b', opacity: 0.4}} 
-                                        contentStyle={{backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '12px', color: '#fff'}} 
+                                    <Tooltip
+                                        cursor={{fill: '#1e293b', opacity: 0.4}}
+                                        contentStyle={{backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '12px', color: '#fff'}}
                                     />
                                     <Bar dataKey="media" fill="#0891b2" radius={[6, 6, 0, 0]} barSize={40} />
                                 </BarChart>
@@ -482,7 +486,7 @@ export default function AdminDashboard() {
                             <div className="flex justify-between items-start">
                                 <div>
                                     <p className="text-slate-400 text-xs uppercase font-bold tracking-wider">Professores</p>
-                                    <p className="text-4xl font-black text-white mt-1">{usersByRole.teacher}</p>
+                                    <p className="text-4xl font-black text-white mt-1">{counts.teachers}</p>
                                 </div>
                                 <Users className="w-6 h-6 text-cyan-500 opacity-50" />
                             </div>
@@ -492,7 +496,7 @@ export default function AdminDashboard() {
                             <div className="flex justify-between items-start">
                                 <div>
                                     <p className="text-slate-400 text-xs uppercase font-bold tracking-wider">Alunos</p>
-                                    <p className="text-4xl font-black text-white mt-1">{usersByRole.student}</p>
+                                    <p className="text-4xl font-black text-white mt-1">{counts.students}</p>
                                 </div>
                                 <GraduationCap className="w-6 h-6 text-amber-500 opacity-50" />
                             </div>
@@ -678,7 +682,7 @@ export default function AdminDashboard() {
                 </div>
                 <h2 className="mt-2 text-3xl font-black">Gerenciar turmas</h2>
             </div>
-            
+
             <div className="flex items-center gap-4">
                 <span className="hidden rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-300 sm:block">
                     Total: {classes.length}
@@ -768,7 +772,7 @@ export default function AdminDashboard() {
         <div className="w-full max-w-md rounded-3xl border border-slate-700 bg-slate-900 p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-black text-white">Criar nova turma</h2>
-                <button 
+                <button
                     onClick={() => setIsOpen(false)}
                     className="text-slate-400 hover:text-white text-2xl"
                 >
@@ -777,9 +781,9 @@ export default function AdminDashboard() {
             </div>
             <p className="mt-2 text-sm text-slate-400">Defina os detalhes da nova turma abaixo.</p>
 
-            <form onSubmit={(e) => { 
-                submitClass(e); 
-                if(classForm.wasSuccessful) setIsOpen(false); 
+            <form onSubmit={(e) => {
+                submitClass(e);
+                if(classForm.wasSuccessful) setIsOpen(false);
             }} className="mt-8 space-y-5">
                 <div>
                     <label className="mb-2 block text-sm font-semibold text-slate-200">Nome da turma</label>

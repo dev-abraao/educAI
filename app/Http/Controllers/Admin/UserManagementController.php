@@ -18,6 +18,15 @@ class UserManagementController extends Controller
 {
     public function index(Request $request): Response
     {
+        $studentsCount = User::query()
+            ->where('role', [UserRole::STUDENT->value])
+            ->count();
+
+        $teachersCount = User::query()
+            ->where('role', [UserRole::TEACHER->value])
+            ->count();
+
+
         $roleFilter = $request->string('role')->toString();
 
         $usersQuery = User::query()
@@ -78,6 +87,10 @@ class UserManagementController extends Controller
             'roles' => [
                 UserRole::TEACHER->value,
                 UserRole::STUDENT->value,
+            ],
+            'counts' => [
+                'students' => $studentsCount,
+                'teachers' => $teachersCount,
             ],
         ]);
     }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('quiz_id')->constrained('quizzes')->cascadeOnDelete();
             $table->text('question_text');
-            $table->unsignedInteger('position')->default(0);
+            $table->unsignedInteger('position')->nullable()->default(0);
             $table->unsignedInteger('points')->default(1);
             $table->timestamps();
 
