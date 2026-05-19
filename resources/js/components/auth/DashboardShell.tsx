@@ -31,10 +31,12 @@ const roleLabels: { [key: string]: string } = {
   admin: "Administrador"
 };
 
+
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const url = usePage().url;
   const { flash, auth } = usePage().props as any;
   const role = auth.user.role;
+  const classes = Array.isArray(auth.classes) ? auth.classes : [];
 
   return (
     <div className="flex flex-col md:flex-row h-screen w-full overflow-hidden bg-[rgb(2,7,23)] font-sans text-slate-200">
@@ -57,12 +59,26 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {role === 'student' && (
              <>
-               <SidebarItem
-                 label="Geral"
-                 active
-                 href="/student/dashboard"
-                 icon={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>}
-               />
+               <h1 className="mx-auto x-3 text-xs font-semibold uppercase tracking-[0.25em] text-slate-600">
+                 Minhas Turmas
+               </h1>
+               {classes.length === 0 ? (
+                 <p className="px-3 text-xs text-slate-500">Nenhuma turma cadastrada.</p>
+               ) : (
+                 <ul className="space-y-2">
+                   {classes.map((classItem: { id: number; name: string }) => (
+                     <li key={classItem.id}>
+                       <Link
+                         href={`/student/dashboard#class-${classItem.id}`}
+                         className="group flex items-center justify-between rounded-xl border border-blue-500/20 bg-blue-950/20 px-4 py-2 text-base font-semibold text-blue-200 transition-all hover:border-blue-400/60 hover:bg-blue-900/30 hover:text-blue-100"
+                       >
+                         <span>{classItem.name}</span>
+                         <span>→</span>
+                       </Link>
+                     </li>
+                   ))}
+                 </ul>
+               )}
              </>
           )}
           {role === 'admin' && (
@@ -109,7 +125,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <main className="flex-1 bg-[rgb(2,7,23)] overflow-y-auto">
+      <main className="flex-1 bg-[rgb(2,7,23)] overflow-y-auto scroll-smooth">
         {flash.error && (
           <div className="mx-6 mt-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
             {flash.error}

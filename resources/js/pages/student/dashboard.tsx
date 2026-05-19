@@ -56,7 +56,7 @@ export default function StudentDashboard({ classes }: StudentDashboardProps) {
 
                     <div className="space-y-12">
                         {classes.map((classItem) => (
-                            <section key={classItem.id} className="space-y-6">
+                            <section id={`class-${classItem.id}`} key={classItem.id} className="space-y-6">
                                 <div className="flex items-center justify-between">
                                     <h2 className="text-xl font-bold text-white tracking-wide">Turma {classItem.name}</h2>
                                     <span className="text-[10px] font-bold text-blue-400 border border-blue-900/50 bg-blue-950/30 px-3 py-1 rounded-full uppercase">
