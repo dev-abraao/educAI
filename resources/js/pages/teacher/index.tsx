@@ -1,6 +1,7 @@
 import { DashboardShell } from "@/components/auth/DashboardShell";
-import { router } from "@inertiajs/react";
-import { useState } from "react";
+import { Paginator, type PaginatedData } from "@/components/Paginator";
+import { Link, router } from "@inertiajs/react";
+import { useEffect, useState } from "react";
 
 type TeacherDashboardProps = {
     classes: {
@@ -18,15 +19,29 @@ type TeacherDashboardProps = {
             name: string;
             role: string;
             updated_at: string;
-        }[]
+        }[];
     }[];
+    activeClassId: number | null;
+    quizzes: PaginatedData<{
+        id: number;
+        class_id: number;
+        title: string;
+        opens_at: string;
+        closes_at: string;
+        duration_minutes: number;
+        created_at: string;
+    }>;
 };
 
-export default function index({ classes }: TeacherDashboardProps) {
-    const [activeClassId, setActiveClassId] = useState<number | null>(classes[0]?.id ?? null);
+export default function index({ classes, activeClassId: initialActiveClassId, quizzes }: TeacherDashboardProps) {
+    const [activeClassId, setActiveClassId] = useState<number | null>(initialActiveClassId ?? null);
     const [copiedId, setCopiedId] = useState<number | null>(null);
 
     const activeClass = classes.find((classItem) => classItem.id === activeClassId) ?? null;
+
+    useEffect(() => {
+        setActiveClassId(initialActiveClassId ?? null);
+    }, [initialActiveClassId]);
 
     const copyInviteLink = (classItem: TeacherDashboardProps["classes"][number]) => {
         const fullUrl = `${window.location.origin}/student/classes/join/${classItem.invite_code}`;
@@ -47,12 +62,21 @@ export default function index({ classes }: TeacherDashboardProps) {
         });
     };
 
+    const selectClass = (classId: number) => {
+        setActiveClassId(classId);
+        router.get(
+            "/teacher/classes",
+            { class_id: classId },
+            { preserveState: true, replace: true }
+        );
+    };
+
     return (
         <DashboardShell>
             <div className="space-y-6 p-6">
                 <header>
                     <p className="mt-2 text-slate-400">
-                        Aqui você pode criar e gerenciar suas turmas e quizzes.
+                        Aqui você pode gerenciar suas turmas ;)
                     </p>
                 </header>
 
@@ -67,7 +91,7 @@ export default function index({ classes }: TeacherDashboardProps) {
                                 <button
                                     key={classItem.id}
                                     type="button"
-                                    onClick={() => setActiveClassId(classItem.id)}
+                                    onClick={() => selectClass(classItem.id)}
                                     className={`rounded-full cursor-pointer px-4 py-2 text-sm font-semibold transition-colors ${
                                         activeClassId === classItem.id
                                             ? "bg-indigo-500 text-white"
@@ -145,6 +169,41 @@ export default function index({ classes }: TeacherDashboardProps) {
                                             </div>
                                         ))
                                     )}
+                                </div>
+
+                                <div className="mt-8">
+                                    <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+                                        Quizzes da turma
+                                    </h3>
+                                    {quizzes.data.length === 0 ? (
+                                        <p className="mt-3 text-sm text-slate-400">
+                                            Nenhum quiz criado para esta turma.
+                                        </p>
+                                    ) : (
+                                        <div className="mt-4 space-y-2">
+                                            {quizzes.data.map((quiz) => (
+                                                <Link
+                                                    key={quiz.id}
+                                                    href={`/teacher/quizzes/${quiz.id}`}
+                                                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/50 px-4 py-3 text-left transition-colors hover:border-indigo-500/50 hover:bg-slate-900/60"
+                                                >
+                                                    <div>
+                                                        <p className="text-sm font-semibold text-slate-100">
+                                                            {quiz.title}
+                                                        </p>
+                                                        <p className="text-xs text-slate-400">
+                                                            Duracao: {quiz.duration_minutes} min
+                                                        </p>
+                                                    </div>
+                                                    <div className="text-xs text-slate-500">
+                                                        {new Date(quiz.opens_at).toLocaleString('pt-BR')} →{' '}
+                                                        {new Date(quiz.closes_at).toLocaleString('pt-BR')}
+                                                    </div>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <Paginator pagination={quizzes} />
                                 </div>
                             </div>
                         )}

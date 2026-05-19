@@ -167,9 +167,9 @@ export default function StudentQuiz() {
                     <header className="rounded-3xl border border-slate-700 bg-slate-900/80 p-6 shadow-2xl backdrop-blur">
                         <Link
                             href="/student/dashboard"
-                            className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-300"
+                            className="text-2xl font-semibold uppercase tracking-[0.25em] text-amber-300"
                         >
-                            Voltar ao painel
+                            ←
                         </Link>
                         <h1 className="mt-3 text-3xl font-black">{quiz.title}</h1>
                         <p className="mt-2 text-sm text-slate-300">

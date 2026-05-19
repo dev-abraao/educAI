@@ -49,7 +49,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             />
           </div>
           <div>
-            <div className="font-bold text-white leading-tight">QuizFlow</div>
+            <div className="font-bold text-white leading-tight">EducAI</div>
             <div className="text-xs text-indigo-400 font-medium">{roleLabels[role]}</div>
           </div>
         </div>

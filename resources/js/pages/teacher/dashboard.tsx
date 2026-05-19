@@ -1,6 +1,7 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { DashboardShell } from '../../components/auth/DashboardShell';
+import { Paginator, type PaginatedData } from '../../components/Paginator';
 
 
 type TeacherClass = {
@@ -24,7 +25,7 @@ type TeacherQuiz = {
 
 type TeacherDashboardProps = {
   classes: TeacherClass[];
-  quizzes: TeacherQuiz[];
+  quizzes: PaginatedData<TeacherQuiz>;
 };
 
 type QuizFormOption = {
@@ -70,6 +71,7 @@ function TeacherDashboard() {
     () => classes.reduce((sum, classItem) => sum + classItem.students_count, 0),
     [classes],
   );
+  const totalQuizzes = quizzes.total ?? quizzes.meta?.total ?? quizzes.data.length;
 
   const quizForm = useForm<QuizFormData>({
     class_id: classes[0]?.id ?? '',
@@ -182,6 +184,10 @@ function TeacherDashboard() {
     });
   };
 
+  const openQuiz = (quizId: number) => {
+    router.visit(`/teacher/quizzes/${quizId}`);
+  };
+
   return (
     <DashboardShell>
       <Head title="Dashboard" />
@@ -208,7 +214,7 @@ function TeacherDashboard() {
           </div>
           <div className="bg-slate-900/50 p-5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm">
             <div className="text-slate-400 text-sm font-medium mb-1">Quizzes criados</div>
-            <div className="text-3xl font-bold text-white">{quizzes.length}</div>
+            <div className="text-3xl font-bold text-white">{totalQuizzes}</div>
           </div>
         </div>
               <h3 className="text-2xl font-bold text-white mb-4">Quizzes recentes</h3>
@@ -242,10 +248,11 @@ function TeacherDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {quizzes.map((quiz) => (
+                  {quizzes.data.map((quiz) => (
                     <tr
                       key={quiz.id}
-                      className="border-b border-slate-800 last:border-0 hover:bg-slate-800/50 transition-colors"
+                      onClick={() => openQuiz(quiz.id)}
+                      className="border-b border-slate-800 last:border-0 hover:bg-slate-800/50 transition-colors cursor-pointer"
                     >
                       <td className="px-4 py-3 font-medium text-slate-200">{quiz.title}</td>
                       <td className="px-4 py-3 text-slate-400">
@@ -260,7 +267,10 @@ function TeacherDashboard() {
                       <td className="px-4 py-3 text-right">
                         <button
                           type="button"
-                          onClick={() => deleteQuiz(quiz.id)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            deleteQuiz(quiz.id);
+                          }}
                           className="text-xs font-semibold text-rose-300 hover:text-rose-200"
                         >
                           Excluir
@@ -268,7 +278,7 @@ function TeacherDashboard() {
                       </td>
                     </tr>
                   ))}
-                  {quizzes.length === 0 && (
+                  {quizzes.data.length === 0 && (
                     <tr>
                       <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
                         Nenhum quiz criado ainda.
@@ -278,6 +288,7 @@ function TeacherDashboard() {
                 </tbody>
               </table>
             </div>
+            <Paginator pagination={quizzes} />
           </div>
 
         {isOpen && (

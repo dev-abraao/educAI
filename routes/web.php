@@ -45,6 +45,7 @@ Route::middleware('auth')->group(function (): void {
 		Route::get('/classes', [TeacherClassesController::class, 'index'])->name('classes.index');
 		Route::delete('/classes/{class}/students', [TeacherClassesController::class, 'removeStudent'])
 			->name('classes.students.remove');
+		Route::get('/quizzes/{quiz}', [TeacherQuizController::class, 'show'])->name('quizzes.show');
 		Route::delete('/quizzes/{quiz}', [TeacherQuizController::class, 'destroy'])
 			->name('quizzes.destroy');
 		Route::post('/quizzes', [TeacherQuizController::class, 'store'])->name('quizzes.store');

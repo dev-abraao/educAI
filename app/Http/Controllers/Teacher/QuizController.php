@@ -5,11 +5,107 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teacher\StoreQuizRequest;
 use App\Models\Quiz;
+use App\Models\QuizAttempt;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class QuizController extends Controller
 {
+    public function show(Request $request, Quiz $quiz): Response
+    {
+        /** @var User $teacher */
+        $teacher = $request->user();
+
+        if (! $teacher->isTeacher() || $quiz->teacher_id !== $teacher->id) {
+            abort(403);
+        }
+
+        $quiz->load([
+            'schoolClass:id,name,teacher_id',
+            'questions' => fn ($query) => $quiz->shuffle ? $query->inRandomOrder() : $query->orderBy('position'),
+            'questions.options' => fn ($query) => $quiz->shuffle ? $query->inRandomOrder() : $query->orderBy('position'),
+        ]);
+
+        $students = collect();
+        if ($quiz->schoolClass) {
+            $students = $quiz->schoolClass
+                ->students()
+                ->orderBy('name')
+                ->get(['users.id', 'users.name', 'users.email']);
+        }
+
+        $attempts = QuizAttempt::query()
+            ->where('quiz_id', $quiz->id)
+            ->with('student:id,name,email')
+            ->get();
+
+        $attemptsByStudent = $attempts->keyBy('student_id');
+
+        $studentRows = $students->map(function (User $student) use ($attemptsByStudent) {
+            $attempt = $attemptsByStudent->get($student->id);
+
+            return [
+                'id' => $student->id,
+                'name' => $student->name,
+                'email' => $student->email,
+                'attempt' => $attempt
+                    ? [
+                        'id' => $attempt->id,
+                        'started_at' => $attempt->started_at,
+                        'submitted_at' => $attempt->submitted_at,
+                        'score' => $attempt->score,
+                        'max_score' => $attempt->max_score,
+                    ]
+                    : null,
+            ];
+        });
+
+        $submittedCount = $attempts->whereNotNull('submitted_at')->count();
+        $startedCount = $attempts->count();
+        $studentCount = $students->count();
+
+        return Inertia::render('teacher/quiz-show', [
+            'quiz' => [
+                'id' => $quiz->id,
+                'title' => $quiz->title,
+                'description' => $quiz->description,
+                'opens_at' => $quiz->opens_at,
+                'closes_at' => $quiz->closes_at,
+                'duration_minutes' => $quiz->duration_minutes,
+                'shuffle' => (bool) ($quiz->shuffle ?? false),
+                'class' => $quiz->schoolClass
+                    ? ['id' => $quiz->schoolClass->id, 'name' => $quiz->schoolClass->name]
+                    : null,
+            ],
+            'questions' => $quiz->questions->map(function ($question) {
+                return [
+                    'id' => $question->id,
+                    'text' => $question->question_text,
+                    'points' => $question->points,
+                    'options' => $question->options->map(function ($option) {
+                        return [
+                            'id' => $option->id,
+                            'text' => $option->option_text,
+                            'is_correct' => $option->is_correct,
+                        ];
+                    }),
+                ];
+            }),
+            'students' => $studentRows,
+            'stats' => [
+                'students' => $studentCount,
+                'started' => $startedCount,
+                'submitted' => $submittedCount,
+                'not_started' => max(0, $studentCount - $startedCount),
+                'pending' => max(0, $studentCount - $submittedCount),
+            ],
+        ]);
+    }
+
     public function store(StoreQuizRequest $request): RedirectResponse
     {
         $data = $request->validated();

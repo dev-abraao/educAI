@@ -27,8 +27,9 @@ class TeacherDashboardController extends Controller
             ->where('teacher_id', $teacher->id)
             ->with('schoolClass:id,name')
             ->latest()
-            ->get(['id', 'class_id', 'title', 'opens_at', 'closes_at', 'duration_minutes', 'created_at'])
-            ->map(function (Quiz $quiz) {
+            ->paginate(10, ['id', 'class_id', 'title', 'opens_at', 'closes_at', 'duration_minutes', 'created_at'])
+            ->withQueryString()
+            ->through(function (Quiz $quiz) {
                 return [
                     'id' => $quiz->id,
                     'class_id' => $quiz->class_id,

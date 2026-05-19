@@ -305,7 +305,7 @@ export default function AdminDashboard() {
     return (
         <DashboardShell>
             <div className="space-y-8 p-8 bg-slate-950 min-h-screen text-slate-200">
-                <Head title="Admin | QuizFlow" />
+                <Head title="Gerenciar" />
 
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                     <div>
