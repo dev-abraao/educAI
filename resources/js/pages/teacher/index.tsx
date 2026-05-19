@@ -33,7 +33,7 @@ type TeacherDashboardProps = {
     }>;
 };
 
-export default function index({ classes, activeClassId: initialActiveClassId, quizzes }: TeacherDashboardProps) {
+export default function Index({ classes, activeClassId: initialActiveClassId, quizzes }: TeacherDashboardProps) {
     const [activeClassId, setActiveClassId] = useState<number | null>(initialActiveClassId ?? null);
     const [copiedId, setCopiedId] = useState<number | null>(null);
 
