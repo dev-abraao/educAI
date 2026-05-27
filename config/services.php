@@ -35,4 +35,22 @@ return [
         ],
     ],
 
+    'llm' => [
+        'default' => env('LLM_PROVIDER', 'anthropic'),
+        'anthropic' => [
+            'key' => env('ANTHROPIC_API_KEY'),
+            'model' => env('ANTHROPIC_MODEL', 'claude-sonnet-4-6'),
+        ],
+        'openai' => [
+            'key' => env('OPENAI_API_KEY'),
+            'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+        ],
+        'gemini' => [
+            'key' => env('GEMINI_API_KEY'),
+            'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+        ],
+        'timeout' => (int) env('LLM_TIMEOUT', 60),
+        'max_questions' => (int) env('LLM_MAX_QUESTIONS', 20),
+    ],
+
 ];
