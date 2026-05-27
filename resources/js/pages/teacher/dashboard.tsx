@@ -63,7 +63,6 @@ const defaultQuestion: QuizFormQuestion = {
 function TeacherDashboard() {
 
   const [isOpen, setIsOpen] = useState(false);
-  const [copiedId, setCopiedId] = useState<number | null>(null);
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiNumQuestions, setAiNumQuestions] = useState<number | ''>(5);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -263,14 +262,6 @@ function TeacherDashboard() {
       },
     });
     closeModal();
-  };
-
-  const copyInviteLink = (classItem: TeacherClass) => {
-    const fullUrl = `${window.location.origin}/student/classes/join/${classItem.invite_code}`;
-    navigator.clipboard.writeText(fullUrl).then(() => {
-      setCopiedId(classItem.id);
-      setTimeout(() => setCopiedId(null), 2000);
-    });
   };
 
   const deleteQuiz = (quizId: number) => {
@@ -640,6 +631,7 @@ function TeacherDashboard() {
                         <div className="space-y-2">
                           {question.options.map((option, optionIndex) => {
                             const letter = String.fromCharCode(65 + optionIndex);
+
                             return (
                               <div
                                 key={optionIndex}
