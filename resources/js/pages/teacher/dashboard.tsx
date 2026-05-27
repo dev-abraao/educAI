@@ -1,7 +1,8 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { DashboardShell } from '../../components/auth/DashboardShell';
-import { Paginator, type PaginatedData } from '../../components/Paginator';
+import { Paginator  } from '../../components/Paginator';
+import type {PaginatedData} from '../../components/Paginator';
 
 
 type TeacherClass = {
@@ -63,8 +64,15 @@ function TeacherDashboard() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiNumQuestions, setAiNumQuestions] = useState<number | ''>(5);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
-  const closeModal = () => setIsOpen(false);
+  const closeModal = () => {
+    setIsOpen(false);
+    setGenerateError(null);
+  };
   const { classes, quizzes } = usePage<TeacherDashboardProps>().props;
   const { auth } = usePage().props as any;
   const totalStudents = useMemo(
@@ -150,6 +158,97 @@ function TeacherDashboard() {
       })),
     };
     quizForm.setData('questions', next);
+  };
+
+  const handleGenerateWithAi = async () => {
+    setGenerateError(null);
+
+    if (aiPrompt.trim().length < 10) {
+      setGenerateError('Descreva o quiz com pelo menos 10 caracteres.');
+
+      return;
+    }
+
+    const num = typeof aiNumQuestions === 'number' ? aiNumQuestions : 0;
+
+    if (num < 1) {
+      setGenerateError('Informe quantas questoes deseja gerar.');
+
+      return;
+    }
+
+    const hasManualWork =
+      quizForm.data.title.trim() !== '' ||
+      quizForm.data.questions.some((question) => question.text.trim() !== '');
+
+    if (
+      hasManualWork &&
+      !window.confirm(
+        'Gerar com IA vai substituir o titulo e as questoes ja preenchidos. Deseja continuar?',
+      )
+    ) {
+      return;
+    }
+
+    const csrfToken = document
+      .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
+      ?.getAttribute('content') ?? '';
+
+    setIsGenerating(true);
+
+    try {
+      const response = await fetch('/teacher/quizzes/generate', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({ prompt: aiPrompt, num_questions: num }),
+      });
+
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const message =
+          (payload && (payload.message as string)) ??
+          'Nao foi possivel gerar o quiz. Tente novamente.';
+        setGenerateError(message);
+
+        return;
+      }
+
+      if (!payload || !Array.isArray(payload.questions)) {
+        setGenerateError('A IA retornou um formato inesperado. Tente reformular o prompt.');
+
+        return;
+      }
+
+      const generatedQuestions: QuizFormQuestion[] = payload.questions.map((q: {
+        text?: string;
+        points?: number;
+        options?: Array<{ text?: string; is_correct?: boolean }>;
+      }) => ({
+        text: String(q.text ?? ''),
+        points: typeof q.points === 'number' && q.points > 0 ? q.points : 1,
+        options: Array.isArray(q.options)
+          ? q.options.map((o) => ({
+              text: String(o.text ?? ''),
+              is_correct: Boolean(o.is_correct),
+            }))
+          : [],
+      }));
+
+      quizForm.setData('title', String(payload.title ?? ''));
+      quizForm.setData('description', String(payload.description ?? ''));
+      quizForm.setData('questions', generatedQuestions);
+    } catch {
+      setGenerateError('Falha de rede ao chamar a IA. Verifique sua conexao.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const submitQuiz = (event: React.FormEvent<HTMLFormElement>) => {
@@ -300,7 +399,60 @@ function TeacherDashboard() {
                 Voce precisa de uma turma para criar um quiz.
               </p>
             ) : (
-              <form onSubmit={submitQuiz} className="space-y-6">
+              <>
+                <div className="mb-6 rounded-2xl border border-indigo-500/30 bg-indigo-500/5 p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="text-sm font-semibold text-indigo-200">Gerar com IA</span>
+                    <span className="text-xs text-slate-400">
+                      (preenche o formulario abaixo; voce revisa antes de publicar)
+                    </span>
+                  </div>
+                  <textarea
+                    value={aiPrompt}
+                    onChange={(event) => setAiPrompt(event.target.value)}
+                    placeholder="Ex: Guerra do Paraguai, foco em causas e consequencias, nivel ensino medio"
+                    rows={3}
+                    disabled={isGenerating}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 disabled:opacity-50"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Descreva o tema e o publico. A quantidade de questoes vem do campo abaixo.
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-end gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300">Quantidade</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={aiNumQuestions}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          setAiNumQuestions(value === '' ? '' : Number(value));
+                        }}
+                        disabled={isGenerating}
+                        className="mt-1 w-24 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 disabled:opacity-50"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleGenerateWithAi}
+                      disabled={isGenerating}
+                      className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:cursor-wait disabled:opacity-70"
+                    >
+                      {isGenerating ? 'Gerando...' : 'Gerar com IA'}
+                    </button>
+                    {isGenerating && (
+                      <span className="text-xs text-slate-400">
+                        Pode levar alguns segundos.
+                      </span>
+                    )}
+                  </div>
+                  {generateError && (
+                    <p className="mt-2 text-sm text-rose-400">{generateError}</p>
+                  )}
+                </div>
+                <form onSubmit={submitQuiz} className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="block text-sm font-semibold text-slate-200">Turma</label>
@@ -410,103 +562,145 @@ function TeacherDashboard() {
                   </label>
                 </div>
 
-                <div className="space-y-4  overflow-y-auto max-h-[31vh]">
+                <div className="space-y-5">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-base font-semibold text-white">Questoes</h4>
+                    <div>
+                      <h4 className="text-base font-semibold text-white">Questoes</h4>
+                      <p className="text-xs text-slate-400">
+                        Clique no circulo verde para marcar a alternativa correta.
+                      </p>
+                    </div>
                     <button
                       type="button"
                       onClick={addQuestion}
-                      className="rounded-lg border border-indigo-500/40 px-3 py-1 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/10"
+                      className="rounded-lg border border-indigo-500/40 px-3 py-1.5 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/10"
                     >
-                      Adicionar questao
+                      + Adicionar questao
                     </button>
                   </div>
 
                   {quizForm.data.questions.map((question, questionIndex) => (
                     <div
                       key={questionIndex}
-                      className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4"
+                      className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5"
                     >
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold text-slate-200">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <p className="text-sm font-bold uppercase tracking-wide text-indigo-300">
                           Questao {questionIndex + 1}
                         </p>
                         <button
                           type="button"
                           onClick={() => removeQuestion(questionIndex)}
-                          className="text-xs text-rose-300 hover:text-rose-200"
+                          className="text-xs font-semibold text-rose-300 hover:text-rose-200"
                         >
-                          Remover
+                          Remover questao
                         </button>
                       </div>
 
-                      <div className="mt-3 grid gap-3 md:grid-cols-[2fr_1fr]">
-                        <input
-                          value={question.text}
-                          onChange={(event) =>
-                            updateQuestion(questionIndex, { text: event.target.value })
-                          }
-                          placeholder="Enunciado da questao"
-                          className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100"
-                          required
-                        />
-                        <input
-                          type="number"
-                          min={1}
-                          value={question.points}
-                          onChange={(event) => {
-                            const nextValue = event.target.value;
-                            updateQuestion(questionIndex, {
-                              points: nextValue === '' ? '' : Number(nextValue),
-                            });
-                          }}
-                          className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100"
-                          required
-                        />
+                      <div className="mt-4 grid gap-4 md:grid-cols-[3fr_1fr]">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300">
+                            Enunciado
+                          </label>
+                          <textarea
+                            value={question.text}
+                            onChange={(event) =>
+                              updateQuestion(questionIndex, { text: event.target.value })
+                            }
+                            placeholder="Escreva o enunciado da questao..."
+                            rows={2}
+                            className="mt-1 w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300">
+                            Pontos
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={question.points}
+                            onChange={(event) => {
+                              const nextValue = event.target.value;
+                              updateQuestion(questionIndex, {
+                                points: nextValue === '' ? '' : Number(nextValue),
+                              });
+                            }}
+                            className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                            required
+                          />
+                        </div>
                       </div>
 
-                      <div className="mt-4 space-y-2">
-                        {question.options.map((option, optionIndex) => (
-                          <div
-                            key={optionIndex}
-                            className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-800 px-3 py-2"
-                          >
-                            <button
-                              type="button"
-                              onClick={() => setCorrectOption(questionIndex, optionIndex)}
-                              className={`h-3 w-3 rounded-full border ${
-                                option.is_correct
-                                  ? 'border-emerald-400 bg-emerald-400'
-                                  : 'border-slate-500'
-                              }`}
-                              aria-label="Marcar alternativa correta"
-                            />
-                            <input
-                              value={option.text}
-                              onChange={(event) =>
-                                updateOption(questionIndex, optionIndex, {
-                                  text: event.target.value,
-                                })
-                              }
-                              placeholder={`Alternativa ${optionIndex + 1}`}
-                              className="flex-1 bg-transparent text-sm text-slate-100 outline-none"
-                              required
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeOption(questionIndex, optionIndex)}
-                              className="text-xs text-slate-400 hover:text-slate-200"
-                            >
-                              Remover
-                            </button>
-                          </div>
-                        ))}
+                      <div className="mt-4">
+                        <p className="mb-2 text-xs font-semibold text-slate-300">
+                          Alternativas
+                        </p>
+                        <div className="space-y-2">
+                          {question.options.map((option, optionIndex) => {
+                            const letter = String.fromCharCode(65 + optionIndex);
+                            return (
+                              <div
+                                key={optionIndex}
+                                className={`flex items-center gap-3 rounded-xl border px-3 py-2 transition-colors ${
+                                  option.is_correct
+                                    ? 'border-emerald-500/60 bg-emerald-500/5'
+                                    : 'border-slate-800 bg-slate-950/40'
+                                }`}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => setCorrectOption(questionIndex, optionIndex)}
+                                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors ${
+                                    option.is_correct
+                                      ? 'border-emerald-400 bg-emerald-400 text-slate-900'
+                                      : 'border-slate-600 text-slate-400 hover:border-emerald-400 hover:text-emerald-300'
+                                  }`}
+                                  aria-label="Marcar alternativa correta"
+                                  title={
+                                    option.is_correct
+                                      ? 'Alternativa correta'
+                                      : 'Clique para marcar como correta'
+                                  }
+                                >
+                                  {letter}
+                                </button>
+                                <input
+                                  value={option.text}
+                                  onChange={(event) =>
+                                    updateOption(questionIndex, optionIndex, {
+                                      text: event.target.value,
+                                    })
+                                  }
+                                  placeholder={`Texto da alternativa ${letter}`}
+                                  className="flex-1 rounded-lg bg-transparent px-1 py-1 text-sm text-slate-100 outline-none"
+                                  required
+                                />
+                                {option.is_correct && (
+                                  <span className="text-xs font-semibold text-emerald-300">
+                                    Correta
+                                  </span>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => removeOption(questionIndex, optionIndex)}
+                                  disabled={question.options.length <= 2}
+                                  className="text-xs text-slate-400 hover:text-rose-300 disabled:opacity-30 disabled:hover:text-slate-400"
+                                >
+                                  Remover
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
                         <button
                           type="button"
                           onClick={() => addOption(questionIndex)}
-                          className="text-xs text-indigo-300 hover:text-indigo-200"
+                          disabled={question.options.length >= 6}
+                          className="mt-2 text-xs font-semibold text-indigo-300 hover:text-indigo-200 disabled:opacity-40"
                         >
-                          Adicionar alternativa
+                          + Adicionar alternativa
                         </button>
                       </div>
                     </div>
@@ -529,7 +723,8 @@ function TeacherDashboard() {
                   </button>
               </div>
             </form>
-          )}
+              </>
+            )}
         </div>
         </div>
           )}
