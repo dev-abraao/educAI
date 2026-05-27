@@ -1,7 +1,8 @@
-import { DashboardShell } from "@/components/auth/DashboardShell";
-import { Paginator, type PaginatedData } from "@/components/Paginator";
 import { Link, router } from "@inertiajs/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { DashboardShell } from "@/components/auth/DashboardShell";
+import { Paginator } from "@/components/Paginator";
+import type { PaginatedData } from "@/components/Paginator";
 
 type TeacherDashboardProps = {
     classes: {
@@ -35,13 +36,15 @@ type TeacherDashboardProps = {
 
 export default function Index({ classes, activeClassId: initialActiveClassId, quizzes }: TeacherDashboardProps) {
     const [activeClassId, setActiveClassId] = useState<number | null>(initialActiveClassId ?? null);
+    const [prevInitialActiveClassId, setPrevInitialActiveClassId] = useState(initialActiveClassId);
     const [copiedId, setCopiedId] = useState<number | null>(null);
 
-    const activeClass = classes.find((classItem) => classItem.id === activeClassId) ?? null;
-
-    useEffect(() => {
+    if (prevInitialActiveClassId !== initialActiveClassId) {
+        setPrevInitialActiveClassId(initialActiveClassId);
         setActiveClassId(initialActiveClassId ?? null);
-    }, [initialActiveClassId]);
+    }
+
+    const activeClass = classes.find((classItem) => classItem.id === activeClassId) ?? null;
 
     const copyInviteLink = (classItem: TeacherDashboardProps["classes"][number]) => {
         const fullUrl = `${window.location.origin}/student/classes/join/${classItem.invite_code}`;
