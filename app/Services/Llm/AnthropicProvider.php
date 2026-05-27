@@ -13,7 +13,7 @@ class AnthropicProvider implements LlmProvider
     private const ENDPOINT = 'https://api.anthropic.com/v1/messages';
 
     /**
-     * {@inheritdoc}
+     * @return array<string, mixed>
      */
     public function generateQuiz(string $prompt, int $numQuestions): array
     {

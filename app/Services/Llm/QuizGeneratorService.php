@@ -12,8 +12,8 @@ class QuizGeneratorService
     /**
      * @return array<string, mixed>
      *
-     * @throws LlmException quando o provedor falha.
-     * @throws LlmValidationException quando o payload retornado não segue o schema canônico.
+     * @throws LlmException
+     * @throws LlmValidationException
      */
     public function generate(string $prompt, int $numQuestions): array
     {
@@ -31,9 +31,6 @@ class QuizGeneratorService
     }
 
     /**
-     * Aplica defaults e remove campos extras antes da validação. Não muda
-     * semântica — só garante shape consistente.
-     *
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
@@ -81,9 +78,6 @@ class QuizGeneratorService
     }
 
     /**
-     * Espelha as regras de StoreQuizRequest aplicáveis ao recorte gerado pela IA
-     * (sem class_id/datas/duração — esses são do professor).
-     *
      * @param  array<string, mixed>  $payload
      */
     private function validate(array $payload): void

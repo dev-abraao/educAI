@@ -17,9 +17,6 @@ beforeEach(function () {
     ]);
 });
 
-/**
- * Helper: monta um payload válido no schema canônico do quiz.
- */
 function validQuizDraft(int $numQuestions = 2): array
 {
     $questions = [];
@@ -119,7 +116,6 @@ it('returns generated quiz JSON on success with anthropic', function () {
 });
 
 it('returns 422 when LLM returns malformed payload', function () {
-    // Dois corretos numa questão — viola "exatamente um correto".
     Http::fake([
         'api.anthropic.com/*' => Http::response([
             'content' => [

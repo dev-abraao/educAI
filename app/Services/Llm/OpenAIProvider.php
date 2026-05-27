@@ -11,7 +11,7 @@ class OpenAIProvider implements LlmProvider
     private const ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
     /**
-     * {@inheritdoc}
+     * @return array<string, mixed>
      */
     public function generateQuiz(string $prompt, int $numQuestions): array
     {

@@ -11,7 +11,7 @@ class GeminiProvider implements LlmProvider
     private const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent';
 
     /**
-     * {@inheritdoc}
+     * @return array<string, mixed>
      */
     public function generateQuiz(string $prompt, int $numQuestions): array
     {
@@ -69,10 +69,6 @@ class GeminiProvider implements LlmProvider
     }
 
     /**
-     * Gemini aceita um subset do OpenAPI 3.0 — sem `additionalProperties`, com
-     * `type` em UPPERCASE opcional, mas tolerante a lowercase. Removemos campos
-     * que ele rejeita.
-     *
      * @param  array<string, mixed>  $schema
      * @return array<string, mixed>
      */

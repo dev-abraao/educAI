@@ -5,10 +5,6 @@ namespace App\Services\Llm;
 class QuizSchema
 {
     /**
-     * Schema canônico do rascunho de quiz, em JSON Schema (Draft 2020-12 subset).
-     * Anthropic/OpenAI aceitam diretamente; Gemini exige uma conversão pra OpenAPI 3.0
-     * (ver GeminiProvider::toGeminiSchema).
-     *
      * @return array<string, mixed>
      */
     public static function jsonSchema(): array
@@ -65,11 +61,6 @@ class QuizSchema
         ];
     }
 
-    /**
-     * Prompt de sistema compartilhado entre todos os providers — reforça as regras
-     * de negócio que o JSON Schema sozinho não consegue expressar (ex: "exatamente
-     * uma alternativa correta").
-     */
     public static function systemPrompt(int $numQuestions): string
     {
         return <<<PROMPT
