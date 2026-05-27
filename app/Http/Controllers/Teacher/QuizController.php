@@ -3,13 +3,19 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Teacher\GenerateQuizRequest;
 use App\Http\Requests\Teacher\StoreQuizRequest;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\User;
+use App\Services\Llm\LlmException;
+use App\Services\Llm\LlmValidationException;
+use App\Services\Llm\QuizGeneratorService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -147,5 +153,28 @@ class QuizController extends Controller
         $quiz->delete();
 
         return back()->with('status', 'Quiz excluído com sucesso.');
+    }
+
+    public function generate(GenerateQuizRequest $request, QuizGeneratorService $generator): JsonResponse
+    {
+        $data = $request->validated();
+
+        try {
+            $draft = $generator->generate($data['prompt'], (int) $data['num_questions']);
+        } catch (LlmValidationException $e) {
+            Log::warning('LLM gerou payload inválido', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'message' => 'A IA retornou um quiz fora do formato esperado. Tente reformular o prompt.',
+            ], 422);
+        } catch (LlmException $e) {
+            Log::error('Falha ao gerar quiz via LLM', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'message' => 'Não foi possível gerar o quiz no momento. Tente novamente em instantes.',
+            ], 422);
+        }
+
+        return response()->json($draft);
     }
 }
