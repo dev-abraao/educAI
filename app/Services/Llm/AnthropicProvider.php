@@ -27,6 +27,25 @@ class AnthropicProvider implements LlmProvider
         }
 
         try {
+            $parts = [];
+
+            if ($file) {
+                $parts[] = [
+                    'type' => 'document',
+                    'source' => [
+                        'type' => 'base64',
+                        'media_type' => $file->getMimeType() ?: 'application/pdf',
+                        'data' => base64_encode($file->getContent()),
+                    ],
+                ];
+            }
+
+            if ($prompt !== '') {
+                $parts[] = [
+                    'type' => 'text',
+                    'text' => $prompt,
+                ];
+            }
             $response = Http::timeout($timeout)
                 ->withHeaders([
                     'x-api-key' => $apiKey,
@@ -45,7 +64,7 @@ class AnthropicProvider implements LlmProvider
                     'tool_choice' => ['type' => 'tool', 'name' => self::TOOL_NAME],
                     'messages' => [[
                         'role' => 'user',
-                        'content' => $prompt,
+                        'content' => $parts,
                     ]],
                 ])
                 ->throw();
