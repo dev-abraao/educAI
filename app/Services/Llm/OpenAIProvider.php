@@ -24,15 +24,23 @@ class OpenAIProvider implements LlmProvider
             throw new LlmException('OPENAI_API_KEY não configurada.');
         }
 
+        if ($file) {
+            throw new LlmException('OpenAI chat completions nao suporta PDF diretamente.');
+        }
+
         try {
             $response = Http::timeout($timeout)
                 ->withToken($apiKey)
                 ->post(self::ENDPOINT, [
                     'model' => $model,
-                    'max_tokens' => 8192,
+                    'max_completion_tokens' => 8192,
                     'messages' => [
-                        ['role' => 'system', 'content' => QuizSchema::systemPrompt($numQuestions)],
-                        ['role' => 'user',   'content' => $prompt],
+                        ['role' => 'system', 'content' => [
+                            ['type' => 'text', 'text' => QuizSchema::systemPrompt($numQuestions)],
+                        ]],
+                        ['role' => 'user', 'content' => [
+                            ['type' => 'text', 'text' => $prompt],
+                        ]],
                     ],
                     'response_format' => [
                         'type' => 'json_schema',
