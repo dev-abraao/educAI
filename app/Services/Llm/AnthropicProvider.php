@@ -4,6 +4,7 @@ namespace App\Services\Llm;
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 
 class AnthropicProvider implements LlmProvider
@@ -15,7 +16,7 @@ class AnthropicProvider implements LlmProvider
     /**
      * @return array<string, mixed>
      */
-    public function generateQuiz(string $prompt, int $numQuestions): array
+    public function generateQuiz(string $prompt, int $numQuestions, ?UploadedFile $file = null): array
     {
         $apiKey = config('services.llm.anthropic.key');
         $model = config('services.llm.anthropic.model');

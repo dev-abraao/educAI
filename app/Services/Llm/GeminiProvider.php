@@ -4,6 +4,7 @@ namespace App\Services\Llm;
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 
 class GeminiProvider implements LlmProvider
@@ -13,7 +14,7 @@ class GeminiProvider implements LlmProvider
     /**
      * @return array<string, mixed>
      */
-    public function generateQuiz(string $prompt, int $numQuestions): array
+    public function generateQuiz(string $prompt, int $numQuestions, ?UploadedFile $file = null): array
     {
         $apiKey = config('services.llm.gemini.key');
         $model = config('services.llm.gemini.model');
@@ -26,6 +27,19 @@ class GeminiProvider implements LlmProvider
         $url = sprintf(self::ENDPOINT, $model);
 
         try {
+            $parts = [
+                ['text' => $prompt],
+            ];
+
+            if ($file) {
+                $parts[] = [
+                    'inlineData' => [
+                        'mimeType' => $file->getMimeType() ?: 'application/pdf',
+                        'data' => base64_encode($file->getContent()),
+                    ],
+                ];
+            }
+
             $response = Http::timeout($timeout)
                 ->withHeaders(['x-goog-api-key' => $apiKey])
                 ->post($url, [
@@ -34,7 +48,7 @@ class GeminiProvider implements LlmProvider
                     ],
                     'contents' => [[
                         'role' => 'user',
-                        'parts' => [['text' => $prompt]],
+                        'parts' => $parts,
                     ]],
                     'generationConfig' => [
                         'responseMimeType' => 'application/json',
