@@ -65,6 +65,7 @@ function TeacherDashboard() {
   const [isOpen, setIsOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiNumQuestions, setAiNumQuestions] = useState<number | ''>(5);
+  const [aiPdfFile, setAiPdfFile] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
 
@@ -162,7 +163,15 @@ function TeacherDashboard() {
   const handleGenerateWithAi = async () => {
     setGenerateError(null);
 
-    if (aiPrompt.trim().length < 10) {
+    const trimmedPrompt = aiPrompt.trim();
+
+    if (trimmedPrompt.length === 0 && !aiPdfFile) {
+      setGenerateError('Descreva o quiz ou envie um PDF.');
+
+      return;
+    }
+
+    if (trimmedPrompt.length > 0 && trimmedPrompt.length < 10) {
       setGenerateError('Descreva o quiz com pelo menos 10 caracteres.');
 
       return;
@@ -175,6 +184,7 @@ function TeacherDashboard() {
 
       return;
     }
+
 
     const hasManualWork =
       quizForm.data.title.trim() !== '' ||
@@ -196,16 +206,24 @@ function TeacherDashboard() {
     setIsGenerating(true);
 
     try {
+      const formData = new FormData();
+      if (trimmedPrompt.length > 0) {
+        formData.append('prompt', trimmedPrompt);
+      }
+      formData.append('num_questions', String(num));
+      if (aiPdfFile) {
+        formData.append('file', aiPdfFile);
+      }
+
       const response = await fetch('/teacher/quizzes/generate', {
         method: 'POST',
         credentials: 'same-origin',
         headers: {
-          'Content-Type': 'application/json',
           Accept: 'application/json',
           'X-CSRF-TOKEN': csrfToken,
           'X-Requested-With': 'XMLHttpRequest',
         },
-        body: JSON.stringify({ prompt: aiPrompt, num_questions: num }),
+        body: formData,
       });
 
       const payload = await response.json().catch(() => null);
@@ -408,7 +426,28 @@ function TeacherDashboard() {
                   />
                   <p className="mt-1 text-xs text-slate-500">
                     Descreva o tema e o publico. A quantidade de questoes vem do campo abaixo.
+                    O PDF e opcional.
                   </p>
+                  <div className="mt-3">
+                    <label className="block text-xs font-semibold text-slate-300">
+                      PDF para analise
+                    </label>
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] ?? null;
+                        setAiPdfFile(file);
+                      }}
+                      disabled={isGenerating}
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-200 hover:file:bg-slate-700 disabled:opacity-50"
+                    />
+                    {aiPdfFile && (
+                      <p className="mt-1 text-xs text-slate-500">
+                        Arquivo selecionado: {aiPdfFile.name}
+                      </p>
+                    )}
+                  </div>
                   <div className="mt-3 flex flex-wrap items-end gap-3">
                     <div>
                       <label className="block text-xs font-semibold text-slate-300">Quantidade</label>

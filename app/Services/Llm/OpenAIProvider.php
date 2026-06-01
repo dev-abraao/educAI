@@ -4,6 +4,7 @@ namespace App\Services\Llm;
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 
 class OpenAIProvider implements LlmProvider
@@ -13,7 +14,7 @@ class OpenAIProvider implements LlmProvider
     /**
      * @return array<string, mixed>
      */
-    public function generateQuiz(string $prompt, int $numQuestions): array
+    public function generateQuiz(string $prompt, int $numQuestions, ?UploadedFile $file = null): array
     {
         $apiKey = config('services.llm.openai.key');
         $model = config('services.llm.openai.model');
@@ -23,15 +24,23 @@ class OpenAIProvider implements LlmProvider
             throw new LlmException('OPENAI_API_KEY não configurada.');
         }
 
+        if ($file) {
+            throw new LlmException('OpenAI chat completions nao suporta PDF diretamente.');
+        }
+
         try {
             $response = Http::timeout($timeout)
                 ->withToken($apiKey)
                 ->post(self::ENDPOINT, [
                     'model' => $model,
-                    'max_tokens' => 8192,
+                    'max_completion_tokens' => 8192,
                     'messages' => [
-                        ['role' => 'system', 'content' => QuizSchema::systemPrompt($numQuestions)],
-                        ['role' => 'user',   'content' => $prompt],
+                        ['role' => 'system', 'content' => [
+                            ['type' => 'text', 'text' => QuizSchema::systemPrompt($numQuestions)],
+                        ]],
+                        ['role' => 'user', 'content' => [
+                            ['type' => 'text', 'text' => $prompt],
+                        ]],
                     ],
                     'response_format' => [
                         'type' => 'json_schema',

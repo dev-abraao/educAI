@@ -1,6 +1,9 @@
 <?php
 
+
 namespace App\Services\Llm;
+
+use Illuminate\Http\UploadedFile;
 
 interface LlmProvider
 {
@@ -9,5 +12,5 @@ interface LlmProvider
      *
      * @throws LlmException
      */
-    public function generateQuiz(string $prompt, int $numQuestions): array;
+    public function generateQuiz(string $prompt, int $numQuestions, ?UploadedFile $file = null): array;
 }

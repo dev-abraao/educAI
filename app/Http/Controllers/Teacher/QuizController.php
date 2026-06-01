@@ -158,9 +158,11 @@ class QuizController extends Controller
     public function generate(GenerateQuizRequest $request, QuizGeneratorService $generator): JsonResponse
     {
         $data = $request->validated();
+        $prompt = isset($data['prompt']) ? (string) $data['prompt'] : '';
+        $file = $request->file('file');
 
         try {
-            $draft = $generator->generate($data['prompt'], (int) $data['num_questions']);
+            $draft = $generator->generate($prompt, (int) $data['num_questions'], $file);
         } catch (LlmValidationException $e) {
             Log::warning('LLM gerou payload inválido', ['error' => $e->getMessage()]);
 

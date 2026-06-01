@@ -4,6 +4,7 @@ namespace App\Services\Llm;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\UploadedFile;
 
 class QuizGeneratorService
 {
@@ -15,9 +16,9 @@ class QuizGeneratorService
      * @throws LlmException
      * @throws LlmValidationException
      */
-    public function generate(string $prompt, int $numQuestions): array
+    public function generate(string $prompt, int $numQuestions, ?UploadedFile $file = null): array
     {
-        $payload = $this->provider->generateQuiz($prompt, $numQuestions);
+        $payload = $this->provider->generateQuiz($prompt, $numQuestions, $file);
 
         $normalized = $this->normalize($payload);
         $this->validate($normalized);
