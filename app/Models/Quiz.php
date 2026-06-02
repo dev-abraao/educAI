@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'opens_at',
     'closes_at',
     'duration_minutes',
+    'shuffle',
 ])]
 class Quiz extends Model
 {
@@ -27,6 +28,7 @@ class Quiz extends Model
             'opens_at' => 'datetime',
             'closes_at' => 'datetime',
             'duration_minutes' => 'integer',
+            'shuffle' => 'boolean',
         ];
     }
 

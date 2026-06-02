@@ -6,9 +6,11 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreManagedUserRequest;
 use App\Http\Requests\Admin\UpdateManagedUserRequest;
+use App\Models\ActivityLog;
 use App\Models\Quiz;
 use App\Models\SchoolClass;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -81,10 +83,27 @@ class UserManagementController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        $activityLogs = ActivityLog::query()
+            ->with('actor:id,name,role')
+            ->latest()
+            ->limit(8)
+            ->get()
+            ->map(fn (ActivityLog $log) => [
+                'id' => $log->id,
+                'event' => $log->event,
+                'description' => $log->description,
+                'actor' => $log->actor
+                    ? ['id' => $log->actor->id, 'name' => $log->actor->name, 'role' => $log->actor->role->value]
+                    : null,
+                'created_at' => $log->created_at,
+                'metadata' => $log->metadata ?? [],
+            ]);
+
         return Inertia::render('admin/dashboard', [
             'users' => $users,
             'classes' => $classes,
             'teachers' => $teachers,
+            'activityLogs' => $activityLogs,
             'filters' => [
                 'role' => $roleFilter,
             ],
@@ -100,7 +119,7 @@ class UserManagementController extends Controller
         ]);
     }
 
-    public function store(StoreManagedUserRequest $request): RedirectResponse
+    public function store(StoreManagedUserRequest $request, ActivityLogger $logger): RedirectResponse
     {
         $data = $request->validated();
         $classIds = $data['class_ids'] ?? null;
@@ -110,10 +129,18 @@ class UserManagementController extends Controller
 
         $this->applyClassAssignments($user, $classIds);
 
+        $logger->record(
+            $request->user(),
+            'user.created',
+            "Usuario {$user->name} criado.",
+            $user,
+            ['role' => $user->role->value]
+        );
+
         return back()->with('status', 'Usuário criado com sucesso.');
     }
 
-    public function update(UpdateManagedUserRequest $request, User $user): RedirectResponse
+    public function update(UpdateManagedUserRequest $request, User $user, ActivityLogger $logger): RedirectResponse
     {
         if ($user->isAdmin()) {
             abort(403);
@@ -144,14 +171,30 @@ class UserManagementController extends Controller
 
         $this->applyClassAssignments($user, $classIds);
 
+        $logger->record(
+            $request->user(),
+            'user.updated',
+            "Usuario {$user->name} atualizado.",
+            $user,
+            ['role' => $user->role->value]
+        );
+
         return back()->with('status', 'Usuário atualizado com sucesso.');
     }
 
-    public function destroy(User $user): RedirectResponse
+    public function destroy(Request $request, User $user, ActivityLogger $logger): RedirectResponse
     {
         if ($user->isAdmin()) {
             abort(403);
         }
+
+        $logger->record(
+            $request->user(),
+            'user.deleted',
+            "Usuario {$user->name} removido.",
+            null,
+            ['deleted_user_id' => $user->id, 'role' => $user->role->value]
+        );
 
         $user->delete();
 

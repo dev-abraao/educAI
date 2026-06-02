@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
+use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -58,8 +60,33 @@ class StudentDashboardController extends Controller
             ];
         });
 
+        $classIds = $classes->pluck('id');
+        $activityLogs = ActivityLog::query()
+            ->with('actor:id,name,role')
+            ->where(function ($query) use ($student, $classIds) {
+                $query->where('actor_id', $student->id)
+                    ->orWhere(function ($subjectQuery) use ($classIds) {
+                        $subjectQuery->where('subject_type', SchoolClass::class)
+                            ->whereIn('subject_id', $classIds);
+                    });
+            })
+            ->latest()
+            ->limit(6)
+            ->get()
+            ->map(fn (ActivityLog $log) => [
+                'id' => $log->id,
+                'event' => $log->event,
+                'description' => $log->description,
+                'actor' => $log->actor
+                    ? ['id' => $log->actor->id, 'name' => $log->actor->name, 'role' => $log->actor->role->value]
+                    : null,
+                'created_at' => $log->created_at,
+                'metadata' => $log->metadata ?? [],
+            ]);
+
         return Inertia::render('student/dashboard', [
             'classes' => $classData,
+            'activityLogs' => $activityLogs,
         ]);
     }
 }
