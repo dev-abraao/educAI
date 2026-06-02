@@ -1,6 +1,10 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Clock, ChevronRight, Lock } from 'lucide-react';
+import { ActivityLogCard, type ActivityLogItem } from '@/components/ActivityLogCard';
 import { DashboardShell } from '../../components/auth/DashboardShell';
+import { EmptyState } from '@/components/EmptyState';
+import { DashboardSkeleton } from '@/components/Skeleton';
+import { useNavigationLoading } from '@/hooks/useNavigationLoading';
 
 type StudentAttempt = {
     id: number;
@@ -28,15 +32,25 @@ type StudentClass = {
 
 type StudentDashboardProps = {
     classes: StudentClass[];
+    activityLogs: ActivityLogItem[];
 };
 
-export default function StudentDashboard({ classes }: StudentDashboardProps) {
+export default function StudentDashboard({ classes, activityLogs }: StudentDashboardProps) {
     const now = new Date();
     const { auth } = usePage().props as any;
+    const navigationLoading = useNavigationLoading();
 
     const handleStartQuiz = (quizId: number) => {
         router.post(`/student/quizzes/${quizId}/start`);
     };
+
+    if (navigationLoading) {
+        return (
+            <DashboardShell>
+                <DashboardSkeleton />
+            </DashboardShell>
+        );
+    }
 
     return (
         <>
@@ -55,6 +69,12 @@ export default function StudentDashboard({ classes }: StudentDashboardProps) {
                     </header>
 
                     <div className="space-y-12">
+                        {classes.length === 0 && (
+                            <EmptyState
+                                title="Nenhuma turma cadastrada"
+                                description="Entre em uma turma usando um link de convite para visualizar quizzes e atividades."
+                            />
+                        )}
                         {classes.map((classItem) => (
                             <section id={`class-${classItem.id}`} key={classItem.id} className="space-y-6">
                                 <div className="flex items-center justify-between">
@@ -65,6 +85,15 @@ export default function StudentDashboard({ classes }: StudentDashboardProps) {
                                 </div>
 
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                                    {classItem.quizzes.length === 0 && (
+                                        <div className="lg:col-span-2">
+                                            <EmptyState
+                                                compact
+                                                title="Nenhum quiz nesta turma"
+                                                description="Quando o professor publicar uma avaliacao, ela aparecera aqui."
+                                            />
+                                        </div>
+                                    )}
                                     {classItem.quizzes.map((quiz) => {
                                         const opensAt = new Date(quiz.opens_at);
                                         const closesAt = new Date(quiz.closes_at);
@@ -136,6 +165,7 @@ export default function StudentDashboard({ classes }: StudentDashboardProps) {
                             </section>
                         ))}
                     </div>
+                    <ActivityLogCard logs={activityLogs ?? []} />
                 </div>
             </main>
             </DashboardShell>

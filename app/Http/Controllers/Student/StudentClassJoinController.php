@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\SchoolClass;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -40,7 +41,7 @@ class StudentClassJoinController extends Controller
         ]);
     }
 
-    public function store(Request $request, string $code): RedirectResponse
+    public function store(Request $request, string $code, ActivityLogger $logger): RedirectResponse
     {
         /** @var User $student */
         $student = $request->user();
@@ -57,7 +58,21 @@ class StudentClassJoinController extends Controller
             abort(403);
         }
 
+        $alreadyJoined = $student->classes()
+            ->where('classes.id', $class->id)
+            ->exists();
+
         $student->classes()->syncWithoutDetaching([$class->id]);
+
+        if (! $alreadyJoined) {
+            $logger->record(
+                $student,
+                'class.joined',
+                "Aluno entrou na turma {$class->name}.",
+                $class,
+                ['class_id' => $class->id]
+            );
+        }
 
         return redirect()->route('student.dashboard')
             ->with('status', 'Você entrou na turma com sucesso.');

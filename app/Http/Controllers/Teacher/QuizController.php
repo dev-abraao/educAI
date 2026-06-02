@@ -8,6 +8,7 @@ use App\Http\Requests\Teacher\StoreQuizRequest;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Services\Llm\LlmException;
 use App\Services\Llm\LlmValidationException;
 use App\Services\Llm\QuizGeneratorService;
@@ -112,11 +113,11 @@ class QuizController extends Controller
         ]);
     }
 
-    public function store(StoreQuizRequest $request): RedirectResponse
+    public function store(StoreQuizRequest $request, ActivityLogger $logger): RedirectResponse
     {
         $data = $request->validated();
 
-        DB::transaction(function () use ($data, $request): void {
+        $quiz = DB::transaction(function () use ($data, $request): Quiz {
             $quiz = Quiz::create([
                 'class_id' => $data['class_id'],
                 'teacher_id' => $request->user()?->id,
@@ -143,13 +144,35 @@ class QuizController extends Controller
                     ]);
                 }
             }
+
+            return $quiz;
         });
+
+        $logger->record(
+            $request->user(),
+            'quiz.created',
+            "Quiz {$quiz->title} criado.",
+            $quiz,
+            ['class_id' => $quiz->class_id]
+        );
 
         return back()->with('status', 'Quiz criado com sucesso.');
     }
 
-    public function destroy(Quiz $quiz): RedirectResponse
+    public function destroy(Request $request, Quiz $quiz, ActivityLogger $logger): RedirectResponse
     {
+        if ($quiz->teacher_id !== $request->user()?->id) {
+            abort(403);
+        }
+
+        $logger->record(
+            $request->user(),
+            'quiz.deleted',
+            "Quiz {$quiz->title} excluido.",
+            null,
+            ['deleted_quiz_id' => $quiz->id, 'class_id' => $quiz->class_id]
+        );
+
         $quiz->delete();
 
         return back()->with('status', 'Quiz excluído com sucesso.');

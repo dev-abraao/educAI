@@ -7,8 +7,10 @@ use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\QuizAttempt;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -82,7 +84,7 @@ class StudentQuizController extends Controller
         ]);
     }
 
-    public function start(Request $request, Quiz $quiz): RedirectResponse
+    public function start(Request $request, Quiz $quiz, ActivityLogger $logger): RedirectResponse
     {
         /** @var User $student */
         $student = $request->user();
@@ -94,15 +96,25 @@ class StudentQuizController extends Controller
             abort(403);
         }
 
-        QuizAttempt::firstOrCreate(
+        $attempt = QuizAttempt::firstOrCreate(
             ['quiz_id' => $quiz->id, 'student_id' => $student->id],
             ['started_at' => $now, 'due_at' => $now->copy()->addMinutes($quiz->duration_minutes)],
         );
 
+        if ($attempt->wasRecentlyCreated) {
+            $logger->record(
+                $student,
+                'quiz.started',
+                "Quiz {$quiz->title} iniciado.",
+                $quiz,
+                ['quiz_id' => $quiz->id]
+            );
+        }
+
         return redirect()->route('student.quizzes.show', $quiz);
     }
 
-    public function submit(Request $request, Quiz $quiz): RedirectResponse
+    public function submit(Request $request, Quiz $quiz, ActivityLogger $logger): RedirectResponse
     {
         /** @var User $student */
         $student = $request->user();
@@ -120,6 +132,13 @@ class StudentQuizController extends Controller
 
         if (now()->gt($attempt->due_at)) {
             $this->autoSubmit($attempt, $quiz);
+            $logger->record(
+                $student,
+                'quiz.submitted',
+                "Quiz {$quiz->title} enviado automaticamente.",
+                $quiz,
+                ['quiz_id' => $quiz->id, 'attempt_id' => $attempt->id]
+            );
 
             return redirect()->route('student.quizzes.show', $quiz);
         }
@@ -136,6 +155,14 @@ class StudentQuizController extends Controller
 
         $this->scoreAndClose($attempt, $quiz, $answersByQuestion);
 
+        $logger->record(
+            $student,
+            'quiz.submitted',
+            "Quiz {$quiz->title} enviado.",
+            $quiz,
+            ['quiz_id' => $quiz->id, 'attempt_id' => $attempt->id]
+        );
+
         return redirect()->route('student.quizzes.show', $quiz)
             ->with('status', 'Quiz enviado com sucesso.');
     }
@@ -146,7 +173,7 @@ class StudentQuizController extends Controller
         $this->scoreAndClose($attempt, $quiz, collect());
     }
 
-    private function scoreAndClose(QuizAttempt $attempt, Quiz $quiz, \Illuminate\Support\Collection $answersByQuestion): void
+    private function scoreAndClose(QuizAttempt $attempt, Quiz $quiz, Collection $answersByQuestion): void
     {
         $score = 0;
         $maxScore = 0;

@@ -1,8 +1,14 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { DashboardShell } from '../../components/auth/DashboardShell';
 import { Paginator  } from '../../components/Paginator';
 import type {PaginatedData} from '../../components/Paginator';
+import { ActivityLogCard, type ActivityLogItem } from '@/components/ActivityLogCard';
+import { EmptyState } from '@/components/EmptyState';
+import { Modal } from '@/components/Modal';
+import { DashboardSkeleton } from '@/components/Skeleton';
+import { MetricCard, PageContainer, PageHeader, Panel } from '@/components/ui';
+import { useNavigationLoading } from '@/hooks/useNavigationLoading';
 
 
 type TeacherClass = {
@@ -27,6 +33,7 @@ type TeacherQuiz = {
 type TeacherDashboardProps = {
   classes: TeacherClass[];
   quizzes: PaginatedData<TeacherQuiz>;
+  activityLogs: ActivityLogItem[];
 };
 
 type QuizFormOption = {
@@ -48,6 +55,7 @@ type QuizFormData = {
   closes_at: string;
   duration_minutes: number | '';
   shuffle: boolean;
+  timezone: string;
   questions: QuizFormQuestion[];
 };
 
@@ -63,17 +71,19 @@ const defaultQuestion: QuizFormQuestion = {
 function TeacherDashboard() {
 
   const [isOpen, setIsOpen] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
+  const aiPromptRef = useRef<HTMLTextAreaElement>(null);
   const [aiNumQuestions, setAiNumQuestions] = useState<number | ''>(5);
   const [aiPdfFile, setAiPdfFile] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
+  const navigationLoading = useNavigationLoading();
+  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Maceio';
 
   const closeModal = () => {
     setIsOpen(false);
     setGenerateError(null);
   };
-  const { classes, quizzes } = usePage<TeacherDashboardProps>().props;
+  const { classes, quizzes, activityLogs } = usePage<TeacherDashboardProps>().props;
   const { auth } = usePage().props as any;
   const totalStudents = useMemo(
     () => classes.reduce((sum, classItem) => sum + classItem.students_count, 0),
@@ -89,8 +99,13 @@ function TeacherDashboard() {
     closes_at: '',
     duration_minutes: 10,
     shuffle: false,
+    timezone: browserTimezone,
     questions: [{ ...defaultQuestion }],
   });
+
+  const scheduleError = quizForm.data.opens_at && quizForm.data.closes_at && quizForm.data.closes_at <= quizForm.data.opens_at
+    ? 'A data de fechamento deve ser posterior a data de abertura.'
+    : null;
 
   const addQuestion = () => {
     quizForm.setData('questions', [...quizForm.data.questions, { ...defaultQuestion }]);
@@ -163,7 +178,7 @@ function TeacherDashboard() {
   const handleGenerateWithAi = async () => {
     setGenerateError(null);
 
-    const trimmedPrompt = aiPrompt.trim();
+    const trimmedPrompt = aiPromptRef.current?.value.trim() ?? '';
 
     if (trimmedPrompt.length === 0 && !aiPdfFile) {
       setGenerateError('Descreva o quiz ou envie um PDF.');
@@ -276,10 +291,11 @@ function TeacherDashboard() {
       onSuccess: () => {
         quizForm.reset();
         quizForm.setData('class_id', classes[0]?.id ?? '');
+        quizForm.setData('timezone', browserTimezone);
         quizForm.setData('questions', [{ ...defaultQuestion }]);
+        closeModal();
       },
     });
-    closeModal();
   };
 
   const deleteQuiz = (quizId: number) => {
@@ -296,53 +312,48 @@ function TeacherDashboard() {
     router.visit(`/teacher/quizzes/${quizId}`);
   };
 
+  if (navigationLoading) {
+    return (
+      <DashboardShell>
+        <DashboardSkeleton variant="table" />
+      </DashboardShell>
+    );
+  }
+
   return (
     <DashboardShell>
       <Head title="Dashboard" />
-      <div className="space-y-8 p-6 bg-[rgb(2,7,23)] min-h-screen font-sans w-[80%] mx-auto">
-        <header className="">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div>
-                                <h1 className="mt-2 text-3xl font-black text-white">Olá, {auth.user.name}!</h1>
-                                <p className="mt-2 text-slate-400">Gerencie suas turmas e realize suas avaliações.</p>
-                            </div>
-
-                        </div>
-                    </header>
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-slate-900/50 p-5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm">
-            <div className="text-slate-400 text-sm font-medium mb-1">Turmas ativas</div>
-            <div className="text-3xl font-bold text-white">
-              {classes.filter((classItem) => classItem.active).length}
-            </div>
-          </div>
-          <div className="bg-slate-900/50 p-5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm">
-            <div className="text-slate-400 text-sm font-medium mb-1">Total de alunos</div>
-            <div className="text-3xl font-bold text-emerald-400">{totalStudents}</div>
-          </div>
-          <div className="bg-slate-900/50 p-5 rounded-xl border border-slate-800 shadow-sm backdrop-blur-sm">
-            <div className="text-slate-400 text-sm font-medium mb-1">Quizzes criados</div>
-            <div className="text-3xl font-bold text-white">{totalQuizzes}</div>
-          </div>
-        </div>
-              <h3 className="text-2xl font-bold text-white mb-4">Quizzes recentes</h3>
-          <div className="bg-slate-900/50 rounded-3xl border border-slate-800 shadow-sm p-5 backdrop-blur-sm">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
-              <button
-                onClick={() => setIsOpen(true)}
-                className="bg-blue-600 hover:bg-indigo-500 text-gray-200 p-3 text-sm cursor-pointer rounded-xl font-medium flex items-center transition-colors shadow-lg shadow-indigo-900/20"
+      <PageContainer className="mx-auto w-full max-w-7xl">
+        <PageHeader
+          title={`Ola, ${auth.user.name}!`}
+          description="Gerencie suas turmas e realize suas avaliacoes."
+          actions={
+            <button
+              onClick={() => setIsOpen(true)}
+              className="bg-blue-600 hover:bg-indigo-500 text-gray-200 p-3 text-sm cursor-pointer rounded-xl font-medium flex items-center transition-colors shadow-lg shadow-indigo-900/20"
+            >
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <svg
-                  className="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Criar Novo Quiz
-              </button>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              Criar Novo Quiz
+            </button>
+          }
+        />
+        <div className="grid md:grid-cols-3 gap-6">
+          <MetricCard label="Turmas ativas" value={classes.filter((classItem) => classItem.active).length} />
+          <MetricCard label="Total de alunos" value={totalStudents} accent="text-emerald-400" />
+          <MetricCard label="Quizzes criados" value={totalQuizzes} />
+        </div>
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+          <Panel className="rounded-3xl">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
+              <h3 className="text-2xl font-bold text-white">Quizzes recentes</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
@@ -389,7 +400,11 @@ function TeacherDashboard() {
                   {quizzes.data.length === 0 && (
                     <tr>
                       <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
-                        Nenhum quiz criado ainda.
+                        <EmptyState
+                          compact
+                          title="Nenhum quiz criado ainda"
+                          description="Use o botao Criar Novo Quiz para publicar sua primeira avaliacao."
+                        />
                       </td>
                     </tr>
                   )}
@@ -397,16 +412,22 @@ function TeacherDashboard() {
               </table>
             </div>
             <Paginator pagination={quizzes} />
-          </div>
+          </Panel>
+          <ActivityLogCard logs={activityLogs ?? []} />
+        </div>
 
-        {isOpen && (
-          <div className='fixed inset-0 z-50 flex items-start justify-center bg-slate-950/80 backdrop-blur-sm p-4 sm:items-center'>
-            <div id="quiz-form" className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-slate-900/50 rounded-xl border border-slate-800 shadow-sm p-6 backdrop-blur-sm">
-            <h3 className="text-lg font-bold text-white mb-4">Criar novo quiz</h3>
+        <Modal
+          open={isOpen}
+          onClose={closeModal}
+          title="Criar novo quiz"
+          description="Configure a turma, janela de disponibilidade e questoes da avaliacao."
+          maxWidth="3xl"
+        >
             {classes.length === 0 ? (
-              <p className="text-sm text-slate-400">
-                Voce precisa de uma turma para criar um quiz.
-              </p>
+              <EmptyState
+                title="Nenhuma turma vinculada"
+                description="Voce precisa ter pelo menos uma turma ativa vinculada para publicar um quiz. Solicite o vinculo ao administrador."
+              />
             ) : (
               <>
                 <div className="mb-6 rounded-2xl border border-indigo-500/30 bg-indigo-500/5 p-4">
@@ -417,8 +438,7 @@ function TeacherDashboard() {
                     </span>
                   </div>
                   <textarea
-                    value={aiPrompt}
-                    onChange={(event) => setAiPrompt(event.target.value)}
+                    ref={aiPromptRef}
                     placeholder="Ex: Guerra do Paraguai, foco em causas e consequencias, nivel ensino medio"
                     rows={3}
                     disabled={isGenerating}
@@ -555,7 +575,14 @@ function TeacherDashboard() {
                     <input
                       type="datetime-local"
                       value={quizForm.data.opens_at}
-                      onChange={(event) => quizForm.setData('opens_at', event.target.value)}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        quizForm.setData('opens_at', value);
+
+                        if (quizForm.data.closes_at && quizForm.data.closes_at <= value) {
+                          quizForm.setData('closes_at', '');
+                        }
+                      }}
                       className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-slate-100"
                       required
                     />
@@ -569,13 +596,17 @@ function TeacherDashboard() {
                     <input
                       type="datetime-local"
                       value={quizForm.data.closes_at}
+                      min={quizForm.data.opens_at || undefined}
                       onChange={(event) => quizForm.setData('closes_at', event.target.value)}
                       className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-slate-100"
                       required
                     />
-                    {quizForm.errors.closes_at && (
-                      <p className="mt-1 text-sm text-rose-400">{quizForm.errors.closes_at}</p>
+                    {(scheduleError || quizForm.errors.closes_at) && (
+                      <p className="mt-1 text-sm text-rose-400">{scheduleError ?? quizForm.errors.closes_at}</p>
                     )}
+                  </div>
+                  <div className="md:col-span-2 rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3 text-xs text-slate-400">
+                    Horario considerado: <span className="font-semibold text-indigo-200">{browserTimezone}</span>. O backend recebe este fuso junto com as datas para salvar o agendamento de forma consistente.
                   </div>
                 </div>
 
@@ -742,12 +773,12 @@ function TeacherDashboard() {
                 </div>
 
                 <div className='flex gap-20'>
-                  <button onClick={closeModal} className="w-full cursor-pointer rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-700/50">
+                  <button type="button" onClick={closeModal} className="w-full cursor-pointer rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-700/50">
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    disabled={quizForm.processing}
+                    disabled={quizForm.processing || Boolean(scheduleError)}
                     className="w-full cursor-pointer rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-70"
                   >
                     {quizForm.processing ? 'Salvando...' : 'Publicar quiz'}
@@ -756,10 +787,8 @@ function TeacherDashboard() {
             </form>
               </>
             )}
-        </div>
-        </div>
-          )}
-      </div>
+        </Modal>
+      </PageContainer>
     </DashboardShell>
   );
 }

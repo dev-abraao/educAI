@@ -1,8 +1,11 @@
 import { Head, router, usePage, useForm } from '@inertiajs/react';
 import { Plus, Users, GraduationCap, School, Backpack } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { ActivityLogCard, type ActivityLogItem } from '@/components/ActivityLogCard';
 import { DashboardShell } from '@/components/auth/DashboardShell';
+import { DashboardSkeleton } from '@/components/Skeleton';
+import { useNavigationLoading } from '@/hooks/useNavigationLoading';
 
 type ManagedRole = 'teacher' | 'student';
 
@@ -57,6 +60,7 @@ type AdminDashboardProps = {
         teachers: number;
         quizzes: number;
     };
+    activityLogs: ActivityLogItem[];
 };
 
 type UpdateUserFormData = {
@@ -70,14 +74,28 @@ type UpdateUserFormData = {
 
 
 export default function AdminDashboard() {
-    const { users, classes, teachers, filters, roles, counts } = usePage<AdminDashboardProps>().props;
+    const { users, classes, teachers, filters, roles, counts, activityLogs } = usePage<AdminDashboardProps>().props;
     const [editingUserId, setEditingUserId] = useState<number | null>(null);
     const [copiedId, setCopiedId] = useState<number | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     const [isOpenUser, setOpenUser] = useState(false);
+    const navigationLoading = useNavigationLoading();
 
     const closeModal = () => setIsOpen(false);
     const closeUserModal = () => setOpenUser(false);
+
+    useEffect(() => {
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                closeModal();
+                closeUserModal();
+            }
+        };
+
+        document.addEventListener('keydown', onKeyDown);
+
+        return () => document.removeEventListener('keydown', onKeyDown);
+    }, []);
 
     const usersByRole = useMemo(() => {
     const teacherCount = users.filter((user) => user.role === 'teacher').length;
@@ -120,10 +138,9 @@ export default function AdminDashboard() {
             preserveScroll: true,
             onSuccess: () => {
                 classForm.reset();
+                closeModal();
             },
         });
-
-        closeModal();
     };
 
     const toggleClassSelection = (selected: number[], classId: number) => {
@@ -241,10 +258,9 @@ export default function AdminDashboard() {
             onSuccess: () => {
                 storeForm.reset();
                 storeForm.setData('role', 'teacher');
+                closeUserModal();
             },
         });
-
-        closeUserModal();
     };
 
     const renderClassSelection = (
@@ -301,6 +317,14 @@ export default function AdminDashboard() {
             </div>
         );
     };
+
+    if (navigationLoading) {
+        return (
+            <DashboardShell>
+                <DashboardSkeleton />
+            </DashboardShell>
+        );
+    }
 
     return (
         <DashboardShell>
@@ -514,6 +538,8 @@ export default function AdminDashboard() {
                         </div>
                     </div>
                 </div>
+
+                <ActivityLogCard logs={activityLogs ?? []} />
 
                 <div>
                     <section className="rounded-3xl border border-slate-700 bg-slate-900/85 p-6 shadow-xl">
@@ -780,8 +806,17 @@ export default function AdminDashboard() {
     </div>
 </section>
 {isOpen && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-        <div className="w-full max-w-md rounded-3xl border border-slate-700 bg-slate-900 p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
+    <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4"
+        onMouseDown={closeModal}
+        role="presentation"
+    >
+        <div
+            className="w-full max-w-md rounded-3xl border border-slate-700 bg-slate-900 p-8 shadow-2xl animate-in fade-in zoom-in duration-200"
+            onMouseDown={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+        >
             <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-black text-white">Criar nova turma</h2>
                 <button
@@ -793,10 +828,7 @@ export default function AdminDashboard() {
             </div>
             <p className="mt-2 text-sm text-slate-400">Defina os detalhes da nova turma abaixo.</p>
 
-            <form onSubmit={(e) => {
-                submitClass(e);
-                if(classForm.wasSuccessful) setIsOpen(false);
-            }} className="mt-8 space-y-5">
+            <form onSubmit={submitClass} className="mt-8 space-y-5">
                 <div>
                     <label className="mb-2 block text-sm font-semibold text-slate-200">Nome da turma</label>
                     <input

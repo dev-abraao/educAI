@@ -1,4 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { EmptyState } from '@/components/EmptyState';
 import { DashboardShell } from '../../components/auth/DashboardShell';
 
 type Quiz = {
@@ -116,9 +117,17 @@ export default function TeacherQuizShow() {
           <section className="rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
             <h2 className="text-xl font-bold text-white">Tentativas por aluno</h2>
             {students.length === 0 ? (
-              <p className="mt-4 text-sm text-slate-400">
-                Nenhum aluno encontrado para esta turma.
-              </p>
+              <div className="mt-4">
+                <EmptyState
+                  compact
+                  title={quiz.class ? 'Nenhum aluno encontrado' : 'Turma nao vinculada'}
+                  description={
+                    quiz.class
+                      ? 'Esta turma ainda nao possui alunos vinculados.'
+                      : 'Este quiz nao possui uma turma vinculada para listar alunos.'
+                  }
+                />
+              </div>
             ) : (
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full text-sm text-left">
@@ -216,7 +225,11 @@ export default function TeacherQuizShow() {
                 </div>
               ))}
               {questions.length === 0 && (
-                <p className="text-sm text-slate-400">Nenhuma questao cadastrada.</p>
+                <EmptyState
+                  compact
+                  title="Nenhuma questao cadastrada"
+                  description="As questoes deste quiz aparecerao aqui quando existirem."
+                />
               )}
             </div>
           </section>

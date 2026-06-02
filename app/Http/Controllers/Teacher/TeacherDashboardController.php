@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Quiz;
 use App\Models\SchoolClass;
 use App\Models\User;
@@ -44,9 +45,42 @@ class TeacherDashboardController extends Controller
                 ];
             });
 
+        $classIds = $classes->pluck('id');
+        $quizIds = Quiz::query()
+            ->where('teacher_id', $teacher->id)
+            ->pluck('id');
+
+        $activityLogs = ActivityLog::query()
+            ->with('actor:id,name,role')
+            ->where(function ($query) use ($teacher, $classIds, $quizIds) {
+                $query->where('actor_id', $teacher->id)
+                    ->orWhere(function ($subjectQuery) use ($classIds) {
+                        $subjectQuery->where('subject_type', SchoolClass::class)
+                            ->whereIn('subject_id', $classIds);
+                    })
+                    ->orWhere(function ($subjectQuery) use ($quizIds) {
+                        $subjectQuery->where('subject_type', Quiz::class)
+                            ->whereIn('subject_id', $quizIds);
+                    });
+            })
+            ->latest()
+            ->limit(8)
+            ->get()
+            ->map(fn (ActivityLog $log) => [
+                'id' => $log->id,
+                'event' => $log->event,
+                'description' => $log->description,
+                'actor' => $log->actor
+                    ? ['id' => $log->actor->id, 'name' => $log->actor->name, 'role' => $log->actor->role->value]
+                    : null,
+                'created_at' => $log->created_at,
+                'metadata' => $log->metadata ?? [],
+            ]);
+
         return Inertia::render('teacher/dashboard', [
             'classes' => $classes,
             'quizzes' => $quizzes,
+            'activityLogs' => $activityLogs,
         ]);
     }
 }
