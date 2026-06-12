@@ -1,5 +1,5 @@
 import { Link, usePage } from "@inertiajs/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { cn } from "@/components/ui";
 
 function SidebarItem({ icon, label, active, href, collapsed }: {
@@ -42,12 +42,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { flash, auth } = usePage().props as any;
   const role = auth.user.role;
   const classes = Array.isArray(auth.classes) ? auth.classes : [];
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem('educai-shell-collapsed');
-    setIsCollapsed(stored === 'true');
-  }, []);
+  const [isCollapsed, setIsCollapsed] = useState(() => (
+    typeof window !== 'undefined' &&
+    window.localStorage.getItem('educai-shell-collapsed') === 'true'
+  ));
 
   const toggleShell = () => {
     setIsCollapsed((current) => {
