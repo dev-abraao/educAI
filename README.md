@@ -234,48 +234,6 @@ Depois acesse:
 http://localhost:8000
 ```
 
-### Comandos úteis no Docker
-
-Executar migrations manualmente:
-
-```bash
-docker compose exec app php artisan migrate --seed
-```
-
-Limpar cache de configuração:
-
-```bash
-docker compose exec app php artisan config:clear
-```
-
-Instalar dependências JS dentro do container:
-
-```bash
-docker compose exec app npm install
-```
-
-Testar acesso do container ao GitHub, útil quando o Composer falhar por timeout:
-
-```bash
-docker compose run --rm app curl -I https://api.github.com
-```
-
-Parar os containers:
-
-```bash
-docker compose down
-```
-
-Parar e remover volumes, incluindo banco, `vendor` e `node_modules`:
-
-```bash
-docker compose down -v
-```
-
-Use `down -v` apenas se puder recriar os dados do banco.
-
----
-
 ## Configurando IA/LLM
 
 O provedor de IA é configurado pelo `.env`.
@@ -289,19 +247,6 @@ LLM_MAX_QUESTIONS=20
 GEMINI_API_KEY=sua_chave_aqui
 GEMINI_MODEL=gemini-2.5-flash
 ```
-
-Também existem variáveis para outros provedores:
-
-```env
-ANTHROPIC_API_KEY=
-ANTHROPIC_MODEL=claude-sonnet-4-6
-
-OPENAI_API_KEY=
-OPENAI_MODEL=gpt-4o-mini
-```
-
-Nunca commit sua chave real de API. Use apenas o `.env` local ou variáveis de ambiente do Docker/servidor.
-
 Depois de alterar variáveis de ambiente, limpe o cache:
 
 ```bash

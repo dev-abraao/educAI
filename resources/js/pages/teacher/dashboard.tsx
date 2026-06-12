@@ -3,7 +3,6 @@ import { useCallback, useMemo, useState, useRef } from 'react';
 import { DashboardShell } from '../../components/auth/DashboardShell';
 import { Paginator  } from '../../components/Paginator';
 import type {PaginatedData} from '../../components/Paginator';
-import { ActivityLogCard, type ActivityLogItem } from '@/components/ActivityLogCard';
 import { EmptyState } from '@/components/EmptyState';
 import { Modal } from '@/components/Modal';
 import { DashboardSkeleton } from '@/components/Skeleton';
@@ -33,7 +32,6 @@ type TeacherQuiz = {
 type TeacherDashboardProps = {
   classes: TeacherClass[];
   quizzes: PaginatedData<TeacherQuiz>;
-  activityLogs: ActivityLogItem[];
 };
 
 type QuizFormOption = {

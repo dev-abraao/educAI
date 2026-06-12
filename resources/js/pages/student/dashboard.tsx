@@ -1,6 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Clock, ChevronRight, Lock } from 'lucide-react';
-import { ActivityLogCard, type ActivityLogItem } from '@/components/ActivityLogCard';
 import { DashboardShell } from '../../components/auth/DashboardShell';
 import { EmptyState } from '@/components/EmptyState';
 import { DashboardSkeleton } from '@/components/Skeleton';
@@ -32,10 +31,9 @@ type StudentClass = {
 
 type StudentDashboardProps = {
     classes: StudentClass[];
-    activityLogs: ActivityLogItem[];
 };
 
-export default function StudentDashboard({ classes, activityLogs }: StudentDashboardProps) {
+export default function StudentDashboard({ classes }: StudentDashboardProps) {
     const now = new Date();
     const { auth } = usePage().props as any;
     const navigationLoading = useNavigationLoading();
