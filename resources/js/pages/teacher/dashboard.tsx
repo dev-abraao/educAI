@@ -1,5 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { useMemo, useState, useRef } from 'react';
+import { useCallback, useMemo, useState, useRef } from 'react';
 import { DashboardShell } from '../../components/auth/DashboardShell';
 import { Paginator  } from '../../components/Paginator';
 import type {PaginatedData} from '../../components/Paginator';
@@ -79,10 +79,10 @@ function TeacherDashboard() {
   const navigationLoading = useNavigationLoading();
   const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Maceio';
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setIsOpen(false);
     setGenerateError(null);
-  };
+  }, []);
   const { classes, quizzes, activityLogs } = usePage<TeacherDashboardProps>().props;
   const { auth } = usePage().props as any;
   const totalStudents = useMemo(
