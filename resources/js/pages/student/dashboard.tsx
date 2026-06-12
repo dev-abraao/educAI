@@ -165,7 +165,6 @@ export default function StudentDashboard({ classes, activityLogs }: StudentDashb
                             </section>
                         ))}
                     </div>
-                    <ActivityLogCard logs={activityLogs ?? []} />
                 </div>
             </main>
             </DashboardShell>

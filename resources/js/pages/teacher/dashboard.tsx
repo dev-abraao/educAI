@@ -350,7 +350,7 @@ function TeacherDashboard() {
           <MetricCard label="Total de alunos" value={totalStudents} accent="text-emerald-400" />
           <MetricCard label="Quizzes criados" value={totalQuizzes} />
         </div>
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+        <div className="grid gap-6">
           <Panel className="rounded-3xl">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
               <h3 className="text-2xl font-bold text-white">Quizzes recentes</h3>
@@ -413,7 +413,6 @@ function TeacherDashboard() {
             </div>
             <Paginator pagination={quizzes} />
           </Panel>
-          <ActivityLogCard logs={activityLogs ?? []} />
         </div>
 
         <Modal

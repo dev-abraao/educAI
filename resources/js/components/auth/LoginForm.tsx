@@ -62,7 +62,7 @@ export default function LoginForm() {
                 disabled={processing}
                 className="cursor-pointer w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
-                {processing ? 'Logging in...' : 'Log in'}
+                {processing ? 'Entrando...' : 'Entrar'}
             </button>
         </form>
     );
