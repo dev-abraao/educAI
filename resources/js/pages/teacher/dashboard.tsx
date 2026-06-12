@@ -81,7 +81,7 @@ function TeacherDashboard() {
     setIsOpen(false);
     setGenerateError(null);
   }, []);
-  const { classes, quizzes, activityLogs } = usePage<TeacherDashboardProps>().props;
+  const { classes, quizzes } = usePage<TeacherDashboardProps>().props;
   const { auth } = usePage().props as any;
   const totalStudents = useMemo(
     () => classes.reduce((sum, classItem) => sum + classItem.students_count, 0),
